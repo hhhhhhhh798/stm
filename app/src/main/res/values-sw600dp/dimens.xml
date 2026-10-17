@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="movie_card_width">120dp</dimen>
+    <dimen name="movie_card_height">180dp</dimen>
+    <dimen name="movie_card_grid_horizontal_gap">16dp</dimen>
+    <dimen name="movie_card_grid_vertical_gap">22dp</dimen>
+    <dimen name="movie_card_shelf_gap">16dp</dimen>
+    <dimen name="hero_height">430dp</dimen>
+</resources>
