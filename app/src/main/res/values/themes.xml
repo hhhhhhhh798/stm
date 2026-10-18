@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:fontFamily">@font/stream_arial</item>
+        <item name="android:windowBackground">@color/netflix_background</item>
+        <item name="android:colorAccent">@color/comic_peach</item>
+        <item name="android:navigationBarColor">@color/netflix_background</item>
+        <item name="android:statusBarColor">@color/netflix_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowAnimationStyle">@style/StreamMasterWindowAnimation</item>
+    </style>
+    <style name="StreamMasterWindowAnimation" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/slide_in_right</item>
+        <item name="android:activityOpenExitAnimation">@anim/slide_out_left</item>
+        <item name="android:activityCloseEnterAnimation">@anim/slide_in_left</item>
+        <item name="android:activityCloseExitAnimation">@anim/slide_out_right</item>
+    </style>
+    <style name="PlayerSidePanelAnimation" parent="@android:style/Animation.Dialog">
+        <item name="android:windowEnterAnimation">@anim/player_panel_in</item>
+        <item name="android:windowExitAnimation">@anim/player_panel_out</item>
+    </style>
+</resources>

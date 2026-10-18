@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="100dp"
+    android:layout_height="150dp"
+    android:stateListAnimator="@animator/card_press"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="@color/movie_card_surface">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:foreground="@drawable/bg_card_frame"
+        android:clipToOutline="true">
+
+        <ImageView
+            android:id="@+id/posterImageView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:contentDescription="@null"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_card_scrim"/>
+
+        <ImageView
+            android:id="@+id/heartImageView"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="@dimen/card_overlay_inset"
+            android:padding="6dp"
+            android:src="@drawable/ic_bookmark"
+            app:tint="@color/text_primary"
+            android:contentDescription="@string/favorites"/>
+
+        <TextView
+            android:id="@+id/ratingTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|start"
+            android:layout_marginStart="@dimen/card_overlay_inset"
+            android:layout_marginBottom="@dimen/card_overlay_inset"
+            android:gravity="center_vertical"
+            android:textColor="@color/movie_rating_text"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:shadowColor="#CC000000"
+            android:shadowDx="0"
+            android:shadowDy="1"
+            android:shadowRadius="3"
+            android:drawableLeft="@drawable/ic_rating_star"
+            android:drawablePadding="4dp"
+            android:includeFontPadding="false"
+            android:maxLines="1"/>
+
+        <ProgressBar
+            android:id="@+id/watchProgress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="3dp"
+            android:layout_gravity="bottom"
+            android:layout_marginStart="@dimen/card_overlay_inset"
+            android:layout_marginEnd="@dimen/card_overlay_inset"
+            android:layout_marginBottom="@dimen/card_border_width"
+            android:max="100"
+            android:progress="0"
+            android:progressTint="@color/comic_peach"
+            android:progressBackgroundTint="#55FFFFFF"
+            android:visibility="gone"/>
+    </FrameLayout>
+</androidx.cardview.widget.CardView>
