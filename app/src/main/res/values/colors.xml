@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#F2C6A5</color>
+    <color name="on_primary">#FFFFFF</color>
+    <color name="netflix_background">#080706</color>
+    <color name="surface_premium">#11100F</color>
+    <color name="surface_elevated">#181513</color>
+    <color name="surface_subtle">#0D0B0A</color>
+    <color name="text_primary">#FFF8F2</color>
+    <color name="text_secondary">#C9BDB5</color>
+    <color name="text_muted">#827A75</color>
+    <color name="accent_red">#E50914</color>
+    <color name="accent_red_dark">#9E070F</color>
+    <color name="comic_peach">#F2C6A5</color>
+    <color name="comic_peach_dim">#C89A79</color>
+    <color name="comic_ink">#27211D</color>
+    <color name="comic_line">#4A3B32</color>
+    <color name="ic_launcher_background">#F2C6A5</color>
+    <color name="movie_rating_surface">#D91A1511</color>
+    <color name="movie_rating_text">#FFF8F2</color>
+    <color name="movie_card_surface">#100E0D</color>
+    <color name="movie_section_divider">#201A17</color>
+    <color name="drawer_surface">#100E0D</color>
+    <color name="drawer_stroke">#332923</color>
+    <!-- Unified design tokens (cards, panels, chips, tabs) -->
+    <color name="card_border">@color/comic_peach_dim</color>
+    <color name="line_default">#5C493D</color>
+    <color name="panel_surface">#171412</color>
+    <color name="chip_surface">#1A1613</color>
+    <color name="badge_solid">#0D0B09</color>
+    <color name="button_ink">#17110E</color>
+    <color name="rating_star">#FFD84A</color>
+    <color name="sheet_surface">#1C1815</color>
+</resources>

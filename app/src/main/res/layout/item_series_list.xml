@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    android:background="@drawable/bg_panel"
+    android:foreground="@drawable/bg_row_ripple"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:clickable="true"
+    android:focusable="true">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="88dp"
+        android:layout_height="124dp"
+        app:cardCornerRadius="@dimen/movie_card_radius"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="@color/movie_card_surface">
+
+        <ImageView
+            android:id="@+id/seriesListPoster"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:contentDescription="@null"/>
+    </androidx.cardview.widget.CardView>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_marginStart="14dp"
+        android:orientation="vertical"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/seriesListTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:textColor="@color/text_primary"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:maxLines="2"
+            android:ellipsize="end"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/seriesListRating"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/movie_rating_text"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:drawableStart="@drawable/ic_rating_star"
+                android:drawablePadding="4dp"
+                android:visibility="gone"/>
+
+            <TextView
+                android:id="@+id/seriesListYear"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:textColor="@color/comic_peach"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:visibility="gone"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/seriesListDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="start"
+            android:lineSpacingExtra="3dp"
+            android:textColor="@color/text_muted"
+            android:textSize="13sp"
+            android:maxLines="3"
+            android:ellipsize="end"/>
+    </LinearLayout>
+</LinearLayout>

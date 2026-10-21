@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Info -->
+    <string name="app_name">Stream Master</string>
+
+    <!-- Header & Search -->
+    <string name="search_hint">Buscar películas o series...</string>
+    <string name="search_start_title">Comienza a buscar</string>
+    <string name="search_start_sub">Busca películas, series o anime...</string>
+    <string name="no_results">No se encontraron resultados</string>
+    <string name="search_results_format">%1$d resultados para \"%2$s\"</string>
+    <string name="trending_movies">Películas en tendencia</string>
+    <string name="latest_series">Últimas series y anime</string>
+    <string name="featured_library">Biblioteca destacada de Stream Master</string>
+
+    <!-- Bottom Navigation -->
+    <string name="home">Inicio</string>
+    <string name="categories">Categorías</string>
+    <string name="search">Buscar</string>
+    <string name="favorites">Favoritos</string>
+    <string name="downloads">Descargas</string>
+    <string name="settings">Ajustes</string>
+
+    <!-- General Messages -->
+    <string name="under_development">En desarrollo</string>
+    <string name="empty_search_toast">Por favor, escribe una palabra para buscar</string>
+    <string name="no_description">Sin descripción disponible.</string>
+    <string name="no_title">Sin título</string>
+    <string name="server_error">Error: Asegúrate de que el servidor esté activo</string>
+    <string name="not_available">N/D</string>
+    <string name="retry">Reintentar</string>
+
+    <!-- Movie Details & Buttons -->
+    <string name="play_now">Ver ahora</string>
+    <string name="resume_play">Reanudar</string>
+    <string name="read_more">Leer más</string>
+    <string name="read_less">Leer menos</string>
+    <string name="in_watchlist">En mi lista</string>
+    <string name="add_to_watchlist">+ Mi lista</string>
+    <string name="added_to_list">Añadido a mi lista</string>
+    <string name="removed_from_list">Eliminado de mi lista</string>
+    <string name="director">Director</string>
+    <string name="duration">Duración</string>
+    <string name="quality">Calidad</string>
+    <string name="language">Idioma</string>
+    <string name="episodes">Episodios</string>
+    <string name="you_may_also_like">También te puede gustar</string>
+    <string name="category_general">General</string>
+    <string name="category_action">Acción</string>
+    <string name="category_latest">Últimos</string>
+    <string name="category_horror">Terror</string>
+    <string name="category_scifi">Ciencia ficción</string>
+
+    <!-- Favorites UI -->
+    <string name="search_fav_hint">Buscar en mi lista...</string>
+    <string name="fav_banner_title">Todos tus favoritos aquí</string>
+    <string name="fav_banner_sub">Todas tus películas y series en un solo lugar</string>
+    <string name="latest_added">Añadidos recientemente</string>
+    <string name="all_items">Todos los elementos</string>
+    <string name="empty_fav_title">Aún no hay elementos</string>
+    <string name="empty_fav_sub">Empieza a añadir películas\na tu lista de favoritos</string>
+    <string name="go_to_home">Ir al Inicio</string>
+    <string name="delete_all_title">Eliminar todos los favoritos</string>
+    <string name="delete_all_message">¿Estás seguro de que quieres eliminar todos los elementos guardados?</string>
+    <string name="delete_confirm">Eliminar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="list_empty_toast">¡La lista ya está vacía!</string>
+    <string name="all_deleted_toast">Se han eliminado todos los elementos</string>
+
+    <!-- Ajustes: historial de reproducción -->
+    <string name="watch_history_section_title">Datos de reproducción</string>
+    <string name="clear_watch_history">Borrar historial de visualización</string>
+    <string name="clear_watch_history_sub">Elimina todos los puntos guardados y "Continuar viendo"</string>
+    <string name="delete_watch_history_title">¿Borrar historial de visualización?</string>
+    <string name="delete_watch_history_message">Esto elimina el punto donde quedaste en cada película y episodio, y vacía "Continuar viendo". No se puede deshacer.</string>
+    <string name="watch_history_cleared_toast">Historial de visualización borrado</string>
+    <string name="watch_history_empty_toast">No hay historial de visualización que borrar</string>
+
+    <!-- Lista de episodios: cuánto ya viste, p. ej. "12/45 min" -->
+    <string name="episode_watched_progress">%1$d/%2$d min</string>
+    <string name="sort_title">Ordenar lista</string>
+    <string name="sort_newest">Añadidos más recientes</string>
+    <string name="sort_oldest">Añadidos más antiguos</string>
+    <string name="sort_alphabetical">Alfabético (A-Z)</string>
+    <string name="sort_success">Ordenado con éxito</string>
+    <string name="fav_count_format">%d elementos guardados</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_subtitle">Personaliza tu experiencia con StreamMaster</string>
+    <string name="settings_brand_label">STREAMMASTER</string>
+    <string name="settings_about">Diseñado para descubrir y ver contenido de forma sencilla y cinematográfica.</string>
+    <string name="drawer_tagline">Tu cine, estés donde estés</string>
+    <string name="drawer_section_app">APLICACIÓN</string>
+    <string name="drawer_description">Una experiencia de streaming limpia y centrada.</string>
+    <string name="change_language">Idioma de la aplicación</string>
+    <string name="choose_language_sub">Elige tu idioma preferido</string>
+
+    <!-- Player & Streaming Controls -->
+    <string name="live_stream">Transmisión en vivo</string>
+    <string name="error_empty_id">Error: El ID está vacío</string>
+    <string name="preparing_stream">Preparando transmisión...</string>
+    <string name="server_1">Servidor 1</string>
+    <string name="subtitles">Subtítulos</string>
+    <string name="no_subtitles">No hay subtítulos disponibles</string>
+    <string name="rewind_10">Rebobinar 10 segundos</string>
+    <string name="forward_10">Adelantar 10 segundos</string>
+    <string name="play_pause">Reproducir/Pausa</string>
+    <string name="invalid_vid_code">Código de vídeo no válido</string>
+    <string name="connecting_to_server">Conectando al servidor...</string>
+    <string name="error_fetch_providers_file">No se pudo obtener el archivo principal de proveedores</string>
+    <string name="all_local_providers_failed">Todos los proveedores locales fallaron</string>
+    <string name="server_connection_error">Error de conexión con el servidor (HTTP </string>
+    <string name="invalid_video_data">Datos de vídeo no válidos del servidor</string>
+    <string name="no_stream_url">No hay URL de transmisión disponible para esta película</string>
+    <string name="network_connection_failed">Error de conexión a la red, por favor verifique su conexión</string>
+    <string name="changing_quality">Cambiando calidad...</string>
+    <string name="quality_change_failed">No se pudo cambiar la calidad, se mantiene la reproducción actual</string>
+    <string name="loading_and_buffering">Cargando y almacenando en búfer...</string>
+    <string name="playback_error">Ocurrió un error durante la reproducción del vídeo</string>
+    <string name="network_disconnected">Conexión de red perdida durante la reproducción</string>
+    <string name="http_error">El servidor rechazó la solicitud (Error HTTP)</string>
+    <string name="player_not_ready">El reproductor no está listo</string>
+    <string name="auto_quality">Automático (Auto)</string>
+    <string name="select_video_quality">Seleccionar calidad de vídeo</string>
+    <string name="subtitles_off">Desactivar subtítulos (Off)</string>
+    <string name="fetching_subtitles">Buscando subtítulos…</string>
+    <string name="no_subtitles_found">No se encontraron subtítulos para este título</string>
+    <string name="external_subtitle">Subtítulo externo</string>
+    <string name="subtitles_dialog_title">Subtítulos y gestión de archivos</string>
+    <string name="subtitles_disabled">Subtítulos desactivados</string>
+    <string name="enabled_prefix">Habilitado: </string>
+    <string name="playback_speed">Velocidad de reproducción</string>
+    <string name="speed_normal">1.0x (Normal)</string>
+    <string name="audio_prefix">Audio</string>
+    <string name="single_audio_track">Solo hay una pista de audio disponible para este vídeo</string>
+    <string name="select_audio_track">Seleccionar pista de audio</string>
+    <string name="selected_prefix">Seleccionado: </string>
+    <string name="player_settings">Ajustes del reproductor</string>
+    <string name="setting_speed">Velocidad de reproducción</string>
+    <string name="setting_quality">Calidad de vídeo</string>
+    <string name="setting_subtitles">Subtítulos e idiomas</string>
+    <string name="setting_audio">Pista de audio</string>
+    <string name="setting_aspect_ratio">Relación de aspecto (Fit / Fill / Zoom)</string>
+    <string name="setting_external_player">Abrir en reproductor externo</string>
+    <string name="setting_pip">Modo Imagen en imagen (PiP)</string>
+    <string name="aspect_fill">Modo de pantalla: Llenar (Fill)</string>
+    <string name="aspect_zoom">Modo de pantalla: Zoom</string>
+    <string name="aspect_fit">Modo de pantalla: Ajustar (Fit)</string>
+    <string name="no_video_url">No hay URL de vídeo disponible para reproducir</string>
+    <string name="choose_external_player">Elegir reproductor de vídeo externo</string>
+    <string name="no_external_player_installed">No hay ningún reproductor externo instalado</string>
+    <string name="external_player_error">Error al iniciar el reproductor externo</string>
+    <string name="restored_position_at">Reproducción restaurada en: </string>
+    <string name="video_ended">El vídeo ha finalizado</string>
+    <string name="replay">Volver a reproducir</string>
+    <string name="volume">Volumen</string>
+    <string name="brightness">Brillo</string>
+
+    <!-- Language Names -->
+    <string name="arabic">Árabe</string>
+    <string name="lang_arabic">Árabe</string>
+    <string name="lang_ar">العربية</string>
+    <string name="lang_en">Inglés</string>
+    <string name="lang_es">Español</string>
+    
+        <!-- Update Dialog -->
+    <string name="update_available_title">Nueva actualización disponible</string>
+    <string name="update_now">Actualizar ahora</string>
+    <string name="update_later">Más tarde</string>
+    <string name="update_downloading_title">Actualizando</string>
+    <string name="update_progress_starting">Iniciando…</string>
+    <string name="update_progress_fmt">%1$s / %2$s — (%3$d%%)</string>
+    <string name="update_download_failed">No se pudo descargar la actualización. Verifica tu conexión e inténtalo de nuevo.</string>
+    <string name="update_verify_failed">El archivo descargado parece dañado. Inténtalo de nuevo.</string>
+    <string name="update_install_permission_title">Permitir instalar esta actualización</string>
+    <string name="update_install_permission_message">Para instalar la actualización, permite que Stream Master instale apps desde esta fuente en la siguiente pantalla.</string>
+    <string name="update_open_settings">Abrir Ajustes</string>
+    <string name="update_retry">Reintentar</string>
+    
+    
+
+    <string name="lang_ar_short">AR</string>
+    <string name="lang_en_short">EN</string>
+    <string name="lang_es_short">ES</string>
+    <string name="category_drama">Drama</string>
+    <string name="category_crime">Crimen</string>
+    <string name="category_animation">Animación</string>
+    <string name="category_comedy">Comedia</string>
+    <string name="downloads_empty">Todavía no hay descargas guardadas en este dispositivo.</string>
+    <string name="continue_watching_subtitle">Continúa donde lo dejaste</string>
+    <string name="continue_watching">Continuar viendo</string>
+    <string name="category_empty">No hay películas en esta categoría todavía</string>
+    <string name="back">Volver</string>
+    <string name="movies">Películas</string>
+    <string name="menu">Menú</string>
+    <string name="lock_controls">Bloquear controles</string>
+
+    <!-- Expanded movie details -->
+    <string name="cast">Reparto</string>
+    <string name="no_cast">No hay información del reparto.</string>
+    <string name="more_info">Más información</string>
+    <string name="tagline">Frase promocional</string>
+    <string name="budget">Presupuesto</string>
+    <string name="box_office">Taquilla</string>
+    <string name="genres_and_production">Géneros y producción</string>
+    <string name="genres">Géneros</string>
+    <string name="production_companies">Productoras</string>
+    <string name="production_countries">Países de producción</string>
+    <string name="reviews">Reseñas</string>
+    <string name="no_reviews">No hay reseñas disponibles.</string>
+    <string name="anonymous_reviewer">Anónimo</string>
+    <string name="no_review_content">No hay texto de reseña.</string>
+
+    <string name="chip_most_watched">Más vistas</string>
+    <string name="chip_top_rated">Mejor valoradas</string>
+    <string name="chip_suggested">Sugeridas</string>
+    <string name="filter_by_category">Categoría</string>
+    <string name="trending_searches">Búsquedas populares</string>
+    <string name="tab_details">Detalles</string>
+    <string name="trailer">Tráiler</string>
+    <string name="trailer_open_failed">No se pudo abrir el tráiler</string>
+    <string name="spoken_languages">Idiomas hablados</string>
+    <string name="series">Series</string>
+    <string name="series_view_toggle">Cambiar vista de cuadrícula/lista</string>
+    <string name="series_search_hint">Buscar series</string>
+    <string name="series_empty_title">No hay series disponibles por ahora</string>
+    <string name="series_empty_sub">Las series aparecerán aquí en cuanto estén disponibles.</string>
+    <string name="series_load_failed">No se pudieron cargar las series</string>
+    <string name="series_episodes">Episodios</string>
+    <string name="series_season_n">Temporada %1$d</string>
+    <string name="series_no_episodes">Aún no hay episodios disponibles</string>
+    <string name="series_episode_unavailable">Este episodio aún no está disponible</string>
+    <string name="press_back_again_to_exit">Pulsa atrás otra vez para salir</string>
+    <string name="select_subtitle_first">Selecciona un subtítulo primero</string>
+    <string name="subtitle_sync_prefix">Sincronización de subtítulos:</string>
+    <string name="room_menu_entry">Sala de visionado</string>
+    <string name="room_title">Sala de visionado</string>
+    <string name="room_create">Crear una sala</string>
+    <string name="room_creating">Creando la sala…</string>
+    <string name="room_create_failed">No se pudo crear la sala</string>
+    <string name="room_too_many">Ya tienes demasiadas salas abiertas</string>
+    <string name="room_chat">Chat de la sala</string>
+    <string name="room_share">Compartir invitación</string>
+    <string name="room_members_fmt">Miembros (%1$d)</string>
+    <string name="room_leave">Salir de la sala</string>
+    <string name="room_end">Cerrar la sala para todos</string>
+    <string name="room_pill_fmt">Sala %1$s · %2$d</string>
+    <string name="room_host_tag">Anfitrión</string>
+    <string name="room_you_tag">Tú</string>
+    <string name="room_only_host">Solo el anfitrión controla la reproducción</string>
+    <string name="room_you_are_host">Ahora eres el anfitrión</string>
+    <string name="room_host_changed">Cambió el anfitrión</string>
+    <string name="room_ended">La sala ha terminado</string>
+    <string name="room_kicked">Te han expulsado de la sala</string>
+    <string name="room_not_found">Sala no encontrada o ya terminó</string>
+    <string name="room_full">La sala está llena</string>
+    <string name="room_connection_lost">Se perdió la conexión con la sala</string>
+    <string name="room_slow_down">Estás enviando muy rápido</string>
+    <string name="room_chat_hint">Escribe un mensaje…</string>
+    <string name="room_send">Enviar</string>
+    <string name="room_share_text">¡Veamos juntos en Stream Master!\nCódigo de sala: %1$s\n%2$s</string>
+    <string name="room_kick_confirm_fmt">¿Expulsar a %1$s de la sala?</string>
+    <string name="room_kick">Expulsar</string>
+    <string name="room_cancel">Cancelar</string>
+    <string name="room_mic">Micrófono</string>
+    <string name="room_mic_permission_denied">Se necesita acceso al micrófono para el chat de voz</string>
+    <string name="room_mic_permission_settings">El micrófono está bloqueado - actívalo para Stream Master en Ajustes del sistema</string>
+    <string name="room_voice_unavailable">El chat de voz no está disponible en este dispositivo</string>
+    <string name="room_muted_by_host_toast">El anfitrión silenció tu micrófono</string>
+    <string name="room_mute">Silenciar</string>
+    <string name="room_unmute">Reactivar</string>
+    <string name="room_participant_actions_fmt">%1$s</string>
+    <string name="room_reconnecting_suffix"> · Reconectando</string>
+    <string name="room_join_title">Unirse a una sala</string>
+    <string name="room_code_hint">Código de sala (6 caracteres)</string>
+    <string name="room_name_hint">Tu nombre en la sala</string>
+    <string name="room_join_button">Unirse</string>
+    <string name="room_invalid_code">Código no válido</string>
+    <string name="room_checking">Comprobando la sala…</string>
+    <string name="room_network_error">Error de conexión, inténtalo de nuevo</string>
+    <string name="room_join_confirm_fmt">Verás «%1$s» con %2$s</string>
+    <string name="room_host_unknown">amigos</string>
+    <string name="drawer_join_room">Unirse a una sala</string>
+</resources>

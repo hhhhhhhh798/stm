@@ -1,0 +1,22 @@
+# Gradle
+.gradle/
+**/build/
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+local.properties
+
+# Generated / signing material
+*.jks
+*.keystore
+*.aab
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary release signing material
+keystore.jks
+# Generated during CI from GitHub Actions secret
+app/src/main/cpp/generated_secure_config.h
