@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Soft shade inside every movie card: fades from the top edge (bookmark) and the bottom edge (rating). -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:gravity="top" android:height="64dp">
+        <shape android:shape="rectangle">
+            <gradient android:angle="270" android:startColor="#B3000000" android:endColor="#00000000"/>
+        </shape>
+    </item>
+    <item android:gravity="bottom" android:height="72dp">
+        <shape android:shape="rectangle">
+            <gradient android:angle="90" android:startColor="#CC000000" android:endColor="#00000000"/>
+        </shape>
+    </item>
+</layer-list>

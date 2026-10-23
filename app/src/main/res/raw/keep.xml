@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Tells the release-build resource shrinker (shrinkResources true, see app/build.gradle)
+  never to strip @string/continue_watching, even though nothing in the code references
+  it as a compile-time R.string constant.
+
+  It's looked up by name at runtime instead — see
+  ShelfAdapter.getLocalizedCategoryTitle(): Resources.getIdentifier("continue_watching", ...) —
+  which the shrinker's static analysis can otherwise misjudge as unused.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@string/continue_watching" />

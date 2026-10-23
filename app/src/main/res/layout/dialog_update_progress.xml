@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:paddingStart="28dp"
+    android:paddingEnd="28dp"
+    android:paddingTop="26dp"
+    android:paddingBottom="22dp">
+
+    <ImageView
+        android:id="@+id/imgUpdateIcon"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_marginBottom="10dp"
+        android:src="@drawable/ic_downloads_premium"
+        app:tint="@color/comic_peach"
+        android:contentDescription="@null" />
+
+    <TextView
+        android:id="@+id/txtUpdateTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/update_downloading_title"
+        android:textColor="@color/text_primary"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="18dp" />
+
+    <ProgressBar
+        android:id="@+id/progressUpdate"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:max="100"
+        android:progress="0"
+        android:progressTint="@color/comic_peach"
+        android:progressBackgroundTint="@color/comic_peach_dim" />
+
+    <TextView
+        android:id="@+id/txtUpdateProgress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="@string/update_progress_starting"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp" />
+
+</LinearLayout>
