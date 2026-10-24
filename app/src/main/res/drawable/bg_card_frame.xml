@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Unified movie-card frame: 3dp solid stroke, outer radius = card radius (12dp). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@android:color/transparent"/>
+    <corners android:radius="@dimen/movie_card_radius"/>
+    <stroke android:width="@dimen/card_border_width" android:color="@color/card_border"/>
+</shape>

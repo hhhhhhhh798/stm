@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="movie_card_width">100dp</dimen>
+    <dimen name="movie_card_height">150dp</dimen>
+    <dimen name="movie_card_radius">12dp</dimen>
+    <dimen name="movie_card_grid_horizontal_gap">8dp</dimen>
+    <dimen name="movie_card_grid_vertical_gap">14dp</dimen>
+    <dimen name="movie_card_shelf_gap">10dp</dimen>
+    <dimen name="movie_rating_height">24dp</dimen>
+    <dimen name="movie_rating_text_size">10sp</dimen>
+    <dimen name="movie_rating_pad_start">7dp</dimen>
+    <dimen name="movie_rating_pad_end">8dp</dimen>
+    <dimen name="movie_rating_pad_vertical">4dp</dimen>
+    <dimen name="movie_title_pad_horizontal">8dp</dimen>
+    <dimen name="movie_title_pad_top">34dp</dimen>
+    <dimen name="movie_title_pad_bottom">9dp</dimen>
+    <dimen name="section_divider_height">1dp</dimen>
+    <dimen name="hero_horizontal_margin">14dp</dimen>
+    <dimen name="hero_height">365dp</dimen>
+    <dimen name="hero_radius">18dp</dimen>
+    <!-- Unified design tokens.
+         card_border_width: 8px measured on the reference screenshot / 2.75 density ~= 3dp.
+         Overlay inset = border (3dp) + gap (5dp) = 8dp. Inner radius = 12dp - 3dp = 9dp. -->
+    <dimen name="card_border_width">3dp</dimen>
+    <dimen name="card_overlay_inset">8dp</dimen>
+    <dimen name="line_width">1dp</dimen>
+    <dimen name="radius_panel">12dp</dimen>
+    <dimen name="episode_thumb_radius">10dp</dimen>
+    <dimen name="radius_tag">8dp</dimen>
+    <dimen name="chip_height">36dp</dimen>
+</resources>

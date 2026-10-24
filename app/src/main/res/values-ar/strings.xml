@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Info -->
+    <string name="app_name">Stream Master</string>
+
+    <!-- Header & Search -->
+    <string name="search_hint">ابحث عن أفلام أو مسلسلات...</string>
+    <string name="search_start_title">ابدأ البحث</string>
+    <string name="search_start_sub">ابحث عن الأفلام، المسلسلات، أو الأنمي...</string>
+    <string name="no_results">لم يتم العثور على نتائج مطابقة</string>
+    <string name="search_results_format">%1$d نتيجة لـ \"%2$s\"</string>
+    <string name="trending_movies">أفلام رائجة</string>
+    <string name="latest_series">أحدث المسلسلات والأنمي</string>
+    <string name="featured_library">مكتبة Stream Master المميزة</string>
+
+    <!-- Bottom Navigation -->
+    <string name="home">الرئيسية</string>
+    <string name="categories">التصنيفات</string>
+    <string name="search">البحث</string>
+    <string name="favorites">المفضلة</string>
+    <string name="downloads">التنزيلات</string>
+    <string name="settings">الإعدادات</string>
+
+    <!-- General Messages -->
+    <string name="under_development">قيد التطوير</string>
+    <string name="empty_search_toast">يرجى كتابة كلمة للبحث</string>
+    <string name="no_description">لا يوجد وصف متاح.</string>
+    <string name="no_title">بدون عنوان</string>
+    <string name="server_error">خطأ: تأكد من تشغيل السيرفر</string>
+    <string name="not_available">غير متاح</string>
+    <string name="retry">إعادة المحاولة</string>
+
+    <!-- Movie Details & Buttons -->
+    <string name="play_now">شاهد الآن</string>
+    <string name="resume_play">متابعة</string>
+    <string name="read_more">اقرأ المزيد</string>
+    <string name="read_less">عرض أقل</string>
+    <string name="in_watchlist">في قائمتي</string>
+    <string name="add_to_watchlist">+ قائمتي</string>
+    <string name="added_to_list">تمت الإضافة إلى قائمتي</string>
+    <string name="removed_from_list">تم الحذف من قائمتي</string>
+    <string name="director">المخرج</string>
+    <string name="duration">المدة</string>
+    <string name="quality">الجودة</string>
+    <string name="language">اللغة</string>
+    <string name="episodes">الحلقات</string>
+    <string name="you_may_also_like">قد يعجبك أيضاً</string>
+    <string name="category_general">عام</string>
+    <string name="category_action">أكشن</string>
+    <string name="category_latest">الأحدث</string>
+    <string name="category_horror">رعب</string>
+    <string name="category_scifi">خيال علمي</string>
+
+    <!-- Favorites UI -->
+    <string name="search_fav_hint">ابحث في قائمتي...</string>
+    <string name="fav_banner_title">كل مفضلاتك هنا</string>
+    <string name="fav_banner_sub">جميع أفلامك وعروضك في مكان واحد</string>
+    <string name="latest_added">أحدث الإضافات</string>
+    <string name="all_items">كل العناصر</string>
+    <string name="empty_fav_title">لا توجد عناصر بعد</string>
+    <string name="empty_fav_sub">ابدأ بإضافة الأفلام\nإلى قائمة المفضلات</string>
+    <string name="go_to_home">الانتقال للرئيسية</string>
+    <string name="delete_all_title">حذف كل المفضلات</string>
+    <string name="delete_all_message">هل أنت تأكد من أنك تريد حذف جميع العناصر المحفوظة؟</string>
+    <string name="delete_confirm">حذف</string>
+    <string name="cancel">إلغاء</string>
+    <string name="list_empty_toast">القائمة فارغة بالفعل!</string>
+    <string name="all_deleted_toast">تم حذف جميع العناصر</string>
+
+    <!-- الإعدادات: سجل المشاهدة -->
+    <string name="watch_history_section_title">بيانات المشاهدة</string>
+    <string name="clear_watch_history">حذف سجل متابعة المشاهدة</string>
+    <string name="clear_watch_history_sub">حذف كل نقاط الاستكمال وسجل \"متابعة المشاهدة\" نهائياً</string>
+    <string name="delete_watch_history_title">حذف سجل المشاهدة؟</string>
+    <string name="delete_watch_history_message">هذا سيحذف مكان توقفك بكل الأفلام والحلقات، وسيفرغ قائمة \"متابعة المشاهدة\". لا يمكن التراجع عن هذا الإجراء.</string>
+    <string name="watch_history_cleared_toast">تم حذف سجل المشاهدة</string>
+    <string name="watch_history_empty_toast">لا يوجد سجل مشاهدة لحذفه</string>
+
+    <!-- قائمة الحلقات: كم شاهدت من الحلقة، مثل "12/45 د" -->
+    <string name="episode_watched_progress">%1$d/%2$d د</string>
+    <string name="sort_title">ترتيب القائمة</string>
+    <string name="sort_newest">الأحدث إضافة</string>
+    <string name="sort_oldest">الأقدم إضافة</string>
+    <string name="sort_alphabetical">أبجدياً (أ-ي)</string>
+    <string name="sort_success">تم الترتيب بنجاح</string>
+    <string name="fav_count_format">تم حفظ %d عنصر</string>
+
+    <!-- Settings -->
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_subtitle">خصّص تجربة StreamMaster كما تحب</string>
+    <string name="settings_brand_label">STREAMMASTER</string>
+    <string name="settings_about">مصمم لاكتشاف ومشاهدة المحتوى بطريقة سينمائية وبسيطة.</string>
+    <string name="drawer_tagline">سينماك أينما كنت</string>
+    <string name="drawer_section_app">التطبيق</string>
+    <string name="drawer_description">تجربة مشاهدة نظيفة ومركزة.</string>
+    <string name="change_language">لغة التطبيق</string>
+    <string name="choose_language_sub">اختر لغتك المفضلة</string>
+
+    <!-- Player & Streaming Controls -->
+    <string name="live_stream">بث مباشر</string>
+    <string name="error_empty_id">خطأ: المعرف فارغ</string>
+    <string name="preparing_stream">جاري تحضير البث...</string>
+    <string name="server_1">السيرفر 1</string>
+    <string name="subtitles">الترجمة</string>
+    <string name="no_subtitles">لا تتوفر ترجمة</string>
+    <string name="rewind_10">إرجاع 10 ثوانٍ</string>
+    <string name="forward_10">تقديم 10 ثوانٍ</string>
+    <string name="play_pause">تشغيل/إيقاف مؤقت</string>
+    <string name="invalid_vid_code">رمز الفيديو غير صالح</string>
+    <string name="connecting_to_server">الاتصال بالخادم...</string>
+    <string name="error_fetch_providers_file">تعذر جلب ملف المزودين الرئيسي</string>
+    <string name="all_local_providers_failed">جميع المزودين المحليين فشلوا</string>
+    <string name="server_connection_error">خطأ في الاتصال بالخادم (HTTP </string>
+    <string name="invalid_video_data">بيانات الفيديو غير صالحة من الخادم</string>
+    <string name="no_stream_url">لا يوجد رابط بث متاح لهذا الفيلم</string>
+    <string name="network_connection_failed">فشل الاتصال بالشبكة، يُرجى التثبت من الاتصال</string>
+    <string name="changing_quality">جاري تغيير الجودة...</string>
+    <string name="quality_change_failed">تعذر تغيير الجودة، تم الإبقاء على التشغيل الحالي</string>
+    <string name="loading_and_buffering">جاري التحميل والتخزين المؤقت...</string>
+    <string name="playback_error">حدث خطأ أثناء تشغيل الفيديو</string>
+    <string name="network_disconnected">انقطع الاتصال بالشبكة أثناء التشغيل</string>
+    <string name="http_error">الخادم رفض الطلب (HTTP Error)</string>
+    <string name="player_not_ready">المشغل غير جاهز</string>
+    <string name="auto_quality">تلقائي (Auto)</string>
+    <string name="select_video_quality">اختر جودة الفيديو</string>
+    <string name="subtitles_off">إيقاف الترجمة (Off)</string>
+    <string name="fetching_subtitles">جاري جلب الترجمات…</string>
+    <string name="no_subtitles_found">لا توجد ترجمات متاحة لهذا العمل</string>
+    <string name="external_subtitle">ترجمة خارجية</string>
+    <string name="subtitles_dialog_title">الترجمة والتحكم بالملفات</string>
+    <string name="subtitles_disabled">تم إيقاف الترجمة</string>
+    <string name="enabled_prefix">تم تفعيل: </string>
+    <string name="playback_speed">سرعة التشغيل</string>
+    <string name="speed_normal">1.0x (عادي)</string>
+    <string name="audio_prefix">الصوت</string>
+    <string name="single_audio_track">يتوفر مضمار صوتي واحد فقط لهذا الفيديو</string>
+    <string name="select_audio_track">اختر المسار الصوتي</string>
+    <string name="selected_prefix">تم اختيار: </string>
+    <string name="player_settings">إعدادات المشغل</string>
+    <string name="setting_speed">سرعة التشغيل</string>
+    <string name="setting_quality">جودة الفيديو</string>
+    <string name="setting_subtitles">الترجمة واللغات</string>
+    <string name="setting_audio">المسار الصوتي</string>
+    <string name="setting_aspect_ratio">وضع أبعاد الشاشة (Fit / Fill / Zoom)</string>
+    <string name="setting_external_player">فتح في مشغل خارجي</string>
+    <string name="setting_pip">وضع الصورة في صورة (PiP)</string>
+    <string name="aspect_fill">وضع الشاشة: ملء الشاشة (Fill)</string>
+    <string name="aspect_zoom">وضع الشاشة: تكبير (Zoom)</string>
+    <string name="aspect_fit">وضع الشاشة: أصل القياس (Fit)</string>
+    <string name="no_video_url">لا يوجد رابط فيديو متاح لتشغيله</string>
+    <string name="choose_external_player">اختر مشغل فيديو خارجي</string>
+    <string name="no_external_player_installed">لا يوجد مشغل خارجي مثبت</string>
+    <string name="external_player_error">حدث خطأ أثناء تشغيل المشغل الخارجي</string>
+    <string name="restored_position_at">تمت استعادة العرض عند: </string>
+    <string name="video_ended">انتهى تشغيل الفيديو</string>
+    <string name="replay">إعادة التشغيل</string>
+    <string name="volume">الصوت</string>
+    <string name="brightness">السطوع</string>
+
+    <!-- Language Names -->
+    <string name="arabic">عربي</string>
+    <string name="lang_arabic">العربية</string>
+    <string name="lang_ar">العربية</string>
+    <string name="lang_en">الإنجليزية</string>
+    <string name="lang_es">الإسبانية</string>
+    
+        <!-- Update Dialog -->
+    <string name="update_available_title">تحديث جديد متوفر</string>
+    <string name="update_now">تحديث الآن</string>
+    <string name="update_later">لاحقاً</string>
+    <string name="update_downloading_title">جارٍ التحديث</string>
+    <string name="update_progress_starting">جارٍ البدء…</string>
+    <string name="update_progress_fmt">%1$s / %2$s — (%3$d%%)</string>
+    <string name="update_download_failed">تعذّر تحميل التحديث. تأكد من الاتصال وحاول مرة أخرى.</string>
+    <string name="update_verify_failed">الملف المحمّل يبدو تالفاً. حاول مرة أخرى.</string>
+    <string name="update_install_permission_title">السماح بتثبيت هذا التحديث</string>
+    <string name="update_install_permission_message">لتثبيت التحديث، فعّل السماح لتطبيق Stream Master بتثبيت التطبيقات من هذا المصدر بالشاشة التالية.</string>
+    <string name="update_open_settings">فتح الإعدادات</string>
+    <string name="update_retry">إعادة المحاولة</string>
+    
+
+    <string name="lang_ar_short">AR</string>
+    <string name="lang_en_short">EN</string>
+    <string name="lang_es_short">ES</string>
+    <string name="category_drama">دراما</string>
+    <string name="category_crime">جريمة</string>
+    <string name="category_animation">رسوم متحركة</string>
+    <string name="category_comedy">كوميديا</string>
+    <string name="downloads_empty">لا توجد تنزيلات محفوظة على هذا الجهاز بعد.</string>
+    <string name="continue_watching_subtitle">تابع من حيث توقفت</string>
+    <string name="continue_watching">متابعة المشاهدة</string>
+    <string name="category_empty">لا توجد أفلام في هذا القسم حالياً</string>
+    <string name="back">رجوع</string>
+    <string name="movies">الأفلام</string>
+    <string name="menu">القائمة</string>
+    <string name="lock_controls">قفل عناصر التحكم</string>
+
+    <!-- Expanded movie details -->
+    <string name="cast">طاقم العمل</string>
+    <string name="no_cast">لا تتوفر معلومات عن طاقم العمل.</string>
+    <string name="more_info">معلومات إضافية</string>
+    <string name="tagline">العبارة الترويجية</string>
+    <string name="budget">الميزانية</string>
+    <string name="box_office">الإيرادات</string>
+    <string name="genres_and_production">التصنيفات والإنتاج</string>
+    <string name="genres">التصنيفات</string>
+    <string name="production_companies">شركات الإنتاج</string>
+    <string name="production_countries">دول الإنتاج</string>
+    <string name="reviews">المراجعات</string>
+    <string name="no_reviews">لا تتوفر مراجعات.</string>
+    <string name="anonymous_reviewer">مستخدم مجهول</string>
+    <string name="no_review_content">لا يوجد نص للمراجعة.</string>
+
+    <string name="chip_most_watched">الأكثر مشاهدة</string>
+    <string name="chip_top_rated">الأعلى تقييماً</string>
+    <string name="chip_suggested">مقترحة</string>
+    <string name="filter_by_category">التصنيف</string>
+    <string name="trending_searches">الأشهر بحثاً</string>
+    <string name="tab_details">تفاصيل</string>
+    <string name="trailer">التريلر</string>
+    <string name="trailer_open_failed">تعذّر فتح التريلر</string>
+    <string name="spoken_languages">اللغات المنطوقة</string>
+    <string name="series">المسلسلات</string>
+    <string name="series_view_toggle">تبديل طريقة العرض (شبكة/قائمة)</string>
+    <string name="series_search_hint">ابحث في المسلسلات</string>
+    <string name="series_empty_title">لا تتوفر مسلسلات حالياً</string>
+    <string name="series_empty_sub">ستظهر المسلسلات هنا فور توفرها.</string>
+    <string name="series_load_failed">تعذّر تحميل المسلسلات</string>
+    <string name="series_episodes">الحلقات</string>
+    <string name="series_season_n">الموسم %1$d</string>
+    <string name="series_no_episodes">لا توجد حلقات متاحة حالياً</string>
+    <string name="series_episode_unavailable">هذه الحلقة غير متاحة حالياً</string>
+    <string name="press_back_again_to_exit">اضغط رجوع مرة أخرى للخروج</string>
+    <string name="select_subtitle_first">اختر ترجمة أولاً</string>
+    <string name="subtitle_sync_prefix">مزامنة الترجمة:</string>
+    <string name="room_menu_entry">غرفة المشاهدة</string>
+    <string name="room_title">غرفة المشاهدة</string>
+    <string name="room_create">إنشاء غرفة مشاهدة</string>
+    <string name="room_creating">جارٍ إنشاء الغرفة…</string>
+    <string name="room_create_failed">تعذّر إنشاء الغرفة</string>
+    <string name="room_too_many">لديك غرف مفتوحة كثيرة، أغلق واحدة أولاً</string>
+    <string name="room_chat">دردشة الغرفة</string>
+    <string name="room_share">مشاركة الدعوة</string>
+    <string name="room_members_fmt">الأعضاء (%1$d)</string>
+    <string name="room_leave">مغادرة الغرفة</string>
+    <string name="room_end">إنهاء الغرفة للجميع</string>
+    <string name="room_pill_fmt">غرفة %1$s · %2$d</string>
+    <string name="room_host_tag">المشرف</string>
+    <string name="room_you_tag">أنت</string>
+    <string name="room_only_host">المشرف فقط يتحكم بالتشغيل</string>
+    <string name="room_you_are_host">أصبحت مشرف الغرفة</string>
+    <string name="room_host_changed">تغيّر مشرف الغرفة</string>
+    <string name="room_ended">انتهت الغرفة</string>
+    <string name="room_kicked">تم إخراجك من الغرفة</string>
+    <string name="room_not_found">الغرفة غير موجودة أو انتهت</string>
+    <string name="room_full">الغرفة ممتلئة</string>
+    <string name="room_connection_lost">انقطع الاتصال بالغرفة</string>
+    <string name="room_slow_down">أرسل ببطء قليلاً</string>
+    <string name="room_chat_hint">اكتب رسالة…</string>
+    <string name="room_send">إرسال</string>
+    <string name="room_share_text">تعال نشاهد سوا على Stream Master!\nكود الغرفة: %1$s\n%2$s</string>
+    <string name="room_kick_confirm_fmt">إخراج %1$s من الغرفة؟</string>
+    <string name="room_kick">إخراج</string>
+    <string name="room_cancel">إلغاء</string>
+    <string name="room_mic">الميكروفون</string>
+    <string name="room_mic_permission_denied">يلزم إذن الميكروفون لاستخدام الدردشة الصوتية</string>
+    <string name="room_mic_permission_settings">الميكروفون محظور - فعّله لتطبيق Stream Master من إعدادات النظام</string>
+    <string name="room_voice_unavailable">الدردشة الصوتية غير متاحة على هذا الجهاز</string>
+    <string name="room_muted_by_host_toast">قام المشرف بكتم ميكروفونك</string>
+    <string name="room_mute">كتم</string>
+    <string name="room_unmute">إلغاء الكتم</string>
+    <string name="room_participant_actions_fmt">%1$s</string>
+    <string name="room_reconnecting_suffix"> · جارٍ إعادة الاتصال</string>
+    <string name="room_join_title">الانضمام إلى غرفة مشاهدة</string>
+    <string name="room_code_hint">كود الغرفة (6 أحرف)</string>
+    <string name="room_name_hint">اسمك في الغرفة</string>
+    <string name="room_join_button">انضمام</string>
+    <string name="room_invalid_code">الكود غير صحيح</string>
+    <string name="room_checking">جارٍ التحقق من الغرفة…</string>
+    <string name="room_network_error">تعذّر الاتصال، حاول مرة أخرى</string>
+    <string name="room_join_confirm_fmt">ستشاهد «%1$s» مع %2$s</string>
+    <string name="room_host_unknown">أصدقائك</string>
+    <string name="drawer_join_room">انضم إلى غرفة مشاهدة</string>
+</resources>

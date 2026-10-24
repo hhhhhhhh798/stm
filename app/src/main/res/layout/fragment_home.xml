@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='utf-8'?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/netflix_background">
+
+        <LinearLayout android:id="@+id/headerContainer" android:layout_width="match_parent" android:layout_height="68dp" android:layout_gravity="top" android:paddingStart="18dp" android:paddingEnd="18dp" android:paddingTop="8dp" android:paddingBottom="6dp" android:gravity="center_vertical" android:orientation="horizontal" android:elevation="20dp" android:background="@android:color/transparent">
+
+            <LinearLayout android:id="@+id/logoText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical" android:layoutDirection="ltr" android:gravity="start|center_vertical">
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="STREAM" android:textColor="@color/text_primary" android:textSize="19sp" android:textStyle="bold|italic" android:fontFamily="sans-serif-black" android:includeFontPadding="false"/>
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="MASTER" android:textColor="@color/comic_peach" android:textSize="15sp" android:textStyle="bold|italic" android:fontFamily="sans-serif-black" android:includeFontPadding="false"/>
+            </LinearLayout>
+
+            <Space android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1"/>
+
+            <ImageView android:id="@+id/globalSearchButton" android:layout_width="42dp" android:layout_height="42dp" android:padding="9dp" android:background="@drawable/bg_circle_transparent" android:src="@drawable/ic_search" android:tint="@color/comic_peach" android:contentDescription="@string/search"/>
+        </LinearLayout>
+
+        <com.google.android.material.appbar.AppBarLayout android:id="@+id/appBar" android:layout_width="match_parent" android:layout_height="430dp" android:layout_marginTop="0dp" android:layout_marginStart="0dp" android:layout_marginEnd="0dp" android:background="@android:color/transparent" android:elevation="0dp">
+
+            <com.google.android.material.appbar.CollapsingToolbarLayout android:id="@+id/collapsingToolbar" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@android:color/transparent" app:contentScrim="@color/netflix_background" app:layout_scrollFlags="scroll|exitUntilCollapsed" app:scrimAnimationDuration="220">
+
+                <FrameLayout android:id="@+id/heroContainer" android:layout_width="match_parent" android:layout_height="430dp" android:clipChildren="true" android:clipToPadding="true" app:layout_collapseMode="parallax" app:layout_collapseParallaxMultiplier="0.50">
+
+                    <androidx.viewpager2.widget.ViewPager2 android:id="@+id/viewPager" android:layout_width="match_parent" android:layout_height="match_parent" android:clipToPadding="true" android:clipChildren="true"/>
+
+                    <View android:layout_width="match_parent" android:layout_height="100dp" android:layout_gravity="bottom" android:background="@drawable/hero_bottom_fade"/>
+
+                    <me.relex.circleindicator.CircleIndicator3 android:id="@+id/indicator" android:layout_width="wrap_content" android:layout_height="18dp" android:layout_gravity="bottom|center_horizontal" android:layout_marginBottom="9dp" app:ci_drawable="@drawable/tab_selector" app:ci_width="5dp" app:ci_height="5dp" app:ci_margin="3dp"/>
+                </FrameLayout>
+            </com.google.android.material.appbar.CollapsingToolbarLayout>
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <androidx.recyclerview.widget.RecyclerView android:id="@+id/recyclerView" android:layout_width="match_parent" android:layout_height="match_parent" android:clipToPadding="false" android:clipChildren="false" android:paddingTop="4dp" android:paddingBottom="132dp" app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+
+        <LinearLayout android:id="@+id/btnOpenDrawerTab" android:layout_width="8dp" android:layout_height="44dp" android:layout_gravity="center_vertical|start" android:background="@drawable/drawer_tab_bg" android:gravity="center" android:elevation="25dp" android:orientation="vertical">
+            <View android:layout_width="2dp" android:layout_height="16dp" android:background="#777D86"/>
+        </LinearLayout>
+
+        
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
