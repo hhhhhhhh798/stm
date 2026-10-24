@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Maps a cache subdirectory to a content:// path the FileProvider can expose. AppUpdateManager
+  writes the downloaded APK to <cacheDir>/updates/, nowhere else, so this is scoped narrowly
+  rather than sharing the whole cache directory.
+-->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <cache-path name="updates" path="updates/" />
+</paths>

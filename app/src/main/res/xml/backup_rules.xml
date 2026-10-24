@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Sensitive app state is encrypted by SecureStorageManager and should not
+         be copied to another installation/device through legacy Auto Backup. -->
+    <exclude domain="sharedpref" path="secure_prefs.xml" />
+</full-backup-content>

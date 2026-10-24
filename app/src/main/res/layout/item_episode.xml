@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Episode row: tonal surface (no outline), 16:9 thumbnail (rounded corners) with a play
+     affordance and a resume-progress line, code + duration + date, watched label, 3-line summary. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="20dp"
+    android:layout_marginEnd="20dp"
+    android:layout_marginBottom="12dp"
+    android:background="@drawable/bg_panel"
+    android:foreground="@drawable/bg_row_ripple"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:clickable="true"
+    android:focusable="true">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="132dp"
+        android:layout_height="74dp"
+        app:cardCornerRadius="@dimen/episode_thumb_radius"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="@color/chip_surface">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/episodeImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/chip_surface"
+                android:scaleType="centerCrop"
+                android:contentDescription="@null"/>
+
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center"
+                android:padding="6dp"
+                android:background="@drawable/bg_circle_accent"
+                android:src="@drawable/ic_play"
+                android:contentDescription="@null"/>
+
+            <ProgressBar
+                android:id="@+id/episodeWatchProgress"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="4dp"
+                android:layout_gravity="bottom"
+                android:max="100"
+                android:progress="0"
+                android:progressTint="@color/comic_peach"
+                android:progressBackgroundTint="#55FFFFFF"
+                android:visibility="gone"/>
+        </FrameLayout>
+    </androidx.cardview.widget.CardView>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/episodeTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:textColor="@color/text_primary"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:maxLines="2"
+            android:ellipsize="end"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/episodeMeta"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="start"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:maxLines="1"
+                android:ellipsize="end"/>
+
+            <TextView
+                android:id="@+id/episodeWatchedLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:gravity="end"
+                android:textColor="@color/comic_peach"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:visibility="gone"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/episodeDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="start"
+            android:lineSpacingExtra="3dp"
+            android:textColor="@color/text_muted"
+            android:textSize="14sp"
+            android:maxLines="3"
+            android:ellipsize="end"/>
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- bg_settings_row turns @color/comic_peach when state_activated=true; text must switch to
+     the dark ink used everywhere else on a peach surface (see color/chip_text.xml), otherwise
+     it stays near-white on a light beige background and becomes unreadable. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_activated="true" android:color="@color/button_ink"/>
+    <item android:color="@color/text_primary"/>
+</selector>
