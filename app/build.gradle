@@ -18,7 +18,7 @@ android {
         applicationId 'com.stream.master'
         minSdk 24
         targetSdk 35
-        versionCode 9
+        versionCode 11
         versionName '4.12.0'
 
         buildConfigField 'String', 'EXPECTED_CERT_SHA256', '"' + expectedCertSha256 + '"'
