@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Arabic uses Noto Kufi Arabic for clean RTL shaping and readable UI labels. -->
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:fontFamily">@font/stream_kufi_arabic_regular</item>
+        <item name="android:windowBackground">@color/netflix_background</item>
+        <item name="android:colorAccent">@color/comic_peach</item>
+        <item name="android:navigationBarColor">@color/netflix_background</item>
+        <item name="android:statusBarColor">@color/netflix_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowAnimationStyle">@style/StreamMasterWindowAnimation</item>
+    </style>
+</resources>

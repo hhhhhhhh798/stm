@@ -1,0 +1,276 @@
+name: Build Stream Master Release APK
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Hardened Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      # Artifacts (the signed APK) count against a SEPARATE storage quota from Actions caches —
+      # hitting it fails the final upload step after the whole build already ran, wasting the run.
+      # Deleting stale ones from earlier runs FIRST means a run that would otherwise fail here
+      # instead frees the quota before doing any real work, and succeeds.
+      - name: Delete previous release artifacts (frees the storage quota)
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "Looking up old StreamMaster-Hardened-Release-APK artifacts..."
+          ids=$(gh api "repos/$REPO/actions/artifacts" --paginate \
+            --jq '.artifacts[] | select(.name=="StreamMaster-Hardened-Release-APK") | .id' 2>/dev/null)
+          if [ -z "$ids" ]; then
+            echo "No previous release artifacts — nothing to delete."
+          else
+            echo "$ids" | while IFS= read -r id; do
+              [ -z "$id" ] && continue
+              echo "Deleting artifact id: $id"
+              gh api -X DELETE "repos/$REPO/actions/artifacts/$id" || true
+            done
+          fi
+
+      # Actions cache storage is shared (and capped) across the whole repo, and every push to this
+      # branch would otherwise leave its old Gradle cache behind uncollected for up to 7 days. Wiping
+      # this branch's prior cache entries before this run starts keeps at most one generation of
+      # cache alive per branch at any time, instead of piling up run after run.
+      - name: Purge this branch's previous Actions caches
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          BRANCH: refs/heads/${{ github.ref_name }}
+        run: |
+          gh extension install actions/gh-actions-cache --force || true
+          echo "Looking up existing caches for $BRANCH ..."
+          cacheKeys=$(gh actions-cache list -R "$REPO" -B "$BRANCH" --limit 100 2>/dev/null | cut -f 1)
+          if [ -z "$cacheKeys" ]; then
+            echo "No previous caches for this branch — nothing to purge."
+          else
+            echo "$cacheKeys" | while IFS= read -r key; do
+              [ -z "$key" ] && continue
+              echo "Deleting cache: $key"
+              gh actions-cache delete "$key" -R "$REPO" -B "$BRANCH" --confirm || true
+            done
+          fi
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          # No cache here on purpose: gradle/actions/setup-gradle below already caches the Gradle
+          # home in more detail. Caching it twice (this action's generic ~/.gradle cache AND the
+          # Gradle-aware one) roughly doubles what's stored for no speed benefit.
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: '8.9'
+          cache-read-only: false
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: ''
+
+      - name: Install pinned Android NDK and CMake
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "ndk;29.0.14206865" "cmake;3.31.6"
+
+      - name: Validate required repository secrets
+        env:
+          BASE_URL: ${{ secrets.BASE_URL }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          ALIAS: ${{ secrets.ALIAS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s tools/generate_native_config.mjs
+          test -n "$BASE_URL" && [[ "$BASE_URL" =~ ^https?:// ]]
+          test -n "$SIGNING_KEY"
+          test -n "$KEY_STORE_PASSWORD"
+          test -n "$KEY_PASSWORD"
+          test -n "$ALIAS"
+          echo "Required repository secrets are present; values are not printed."
+
+      - name: Generate encrypted native configuration
+        env:
+          BASE_URL: ${{ secrets.BASE_URL }}
+        run: node tools/generate_native_config.mjs
+
+      - name: Prepare release signing certificate pin
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "${{ secrets.SIGNING_KEY }}" | base64 -d > keystore.jks
+          CERT_SHA=$(keytool -list -v -keystore keystore.jks -storepass "${{ secrets.KEY_STORE_PASSWORD }}" -alias "${{ secrets.ALIAS }}" | awk -F': ' '/Certificate fingerprints/{flag=1; next} flag && /SHA256:/{print $2; exit}' | tr -d ':')
+          test -n "$CERT_SHA"
+          cat <<EOF > app/src/main/java/com/stream/master/BuildSecurityConfig.java
+          package com.stream.master;
+          public final class BuildSecurityConfig {
+              private BuildSecurityConfig() {}
+              public static final String EXPECTED_CERT_SHA256 = "$CERT_SHA";
+          }
+          EOF
+
+      - name: Build release with R8 and native CMake library
+        run: gradle --no-daemon --stacktrace clean assembleRelease
+        env:
+          # Bumped from 4g: WebRTC adds a meaningful chunk of bytecode for R8 to shrink/trace,
+          # and GitHub-hosted ubuntu-latest runners have 16GB RAM, so there's ample headroom.
+          GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx6g
+
+      - name: Verify native library and final APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK=$(find app/build/outputs/apk/release -maxdepth 1 -name '*.apk' -print -quit)
+          test -n "$APK"
+          unzip -p "$APK" lib/arm64-v8a/libsecure-lib.so > /tmp/libsecure-lib.so
+
+          file /tmp/libsecure-lib.so
+          readelf -d /tmp/libsecure-lib.so | grep -E 'NEEDED.*lib(log|c)\.so'
+
+          if readelf -S /tmp/libsecure-lib.so | grep -q '\.symtab'; then
+            echo 'ERROR: native symbol table survived release packaging'
+            exit 1
+          fi
+          if readelf -d /tmp/libsecure-lib.so | grep -E 'RPATH|RUNPATH'; then
+            echo 'ERROR: RUNPATH/RPATH survived release packaging'
+            exit 1
+          fi
+          if strings /tmp/libsecure-lib.so | grep -E -q 'stream_master_secret|9jEf7UytU'; then
+            echo 'ERROR: plaintext bootstrap values survived native build'
+            exit 1
+          fi
+          if strings /tmp/libsecure-lib.so | grep -E -q 'getGitHubUser|getGitHubRepo|getGitHubBranch|getApiTokenEndpoint|getRepoConfigUrl'; then
+            echo 'ERROR: obsolete JNI names survived native build'
+            exit 1
+          fi
+
+      - name: Zipalign release APK
+        run: |
+          set -euo pipefail
+          BUILD_TOOLS_DIR=$(ls -d "$ANDROID_HOME/build-tools"/* | sort -V | tail -n 1)
+          APK=$(find app/build/outputs/apk/release -maxdepth 1 -name '*.apk' -print -quit)
+          "$BUILD_TOOLS_DIR/zipalign" -f -p 4 "$APK" app/build/outputs/apk/release/StreamMaster-aligned.apk
+          rm -f "$APK"
+
+      - name: Sign release APK
+        run: |
+          set -euo pipefail
+          echo "${{ secrets.SIGNING_KEY }}" | base64 -d > keystore.jks
+          BUILD_TOOLS_DIR=$(ls -d "$ANDROID_HOME/build-tools"/* | sort -V | tail -n 1)
+          "$BUILD_TOOLS_DIR/apksigner" sign \
+            --ks keystore.jks \
+            --ks-key-alias "${{ secrets.ALIAS }}" \
+            --ks-pass pass:"${{ secrets.KEY_STORE_PASSWORD }}" \
+            --key-pass pass:"${{ secrets.KEY_PASSWORD }}" \
+            --out app/build/outputs/apk/release/StreamMaster-signed.apk \
+            app/build/outputs/apk/release/StreamMaster-aligned.apk
+          rm -f keystore.jks app/build/outputs/apk/release/StreamMaster-aligned.apk
+
+      - name: Verify APK signature
+        run: |
+          BUILD_TOOLS_DIR=$(ls -d "$ANDROID_HOME/build-tools"/* | sort -V | tail -n 1)
+          "$BUILD_TOOLS_DIR/apksigner" verify --verbose app/build/outputs/apk/release/StreamMaster-signed.apk
+
+      - name: Upload hardened release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: StreamMaster-Hardened-Release-APK
+          path: app/build/outputs/apk/release/StreamMaster-signed.apk
+          if-no-files-found: error
+          retention-days: 3
+
+      # Everything below here is the in-app self-update feed: a GitHub Release carrying both the
+      # signed APK and an update.json the app polls (via /api/config's update_json_url). Scoped to
+      # github.event_name == 'push' only - a pull_request build must never publish a public release.
+      - name: Compute APK checksum and build update.json
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK=app/build/outputs/apk/release/StreamMaster-signed.apk
+          SHA256=$(sha256sum "$APK" | cut -d' ' -f1)
+          SIZE=$(stat -c%s "$APK")
+          VERSION_CODE=$(grep -oE 'versionCode [0-9]+' app/build.gradle | grep -oE '[0-9]+')
+          VERSION_NAME=$(grep -oE "versionName '[^']+'" app/build.gradle | sed -E "s/versionName '([^']+)'/\1/")
+          # releases/latest/download/<asset> is a STABLE URL GitHub always resolves to whichever
+          # release is currently marked "latest" - no tag name needs to be known by the app or the
+          # server ahead of time, so nothing else ever needs to change when a new version ships.
+          APK_URL="https://github.com/${{ github.repository }}/releases/latest/download/StreamMaster-signed.apk"
+          cat > update.json << EOF
+          {
+            "latest_version_code": $VERSION_CODE,
+            "latest_version_name": "$VERSION_NAME",
+            "apk_url": "$APK_URL",
+            "apk_sha256": "$SHA256",
+            "apk_size_bytes": $SIZE,
+            "messages": {
+              "ar": "يتوفر تحديث جديد لتطبيق Stream Master ($VERSION_NAME)! يرجى التحديث الآن للحصول على أفضل تجربة.",
+              "en": "A new update for Stream Master ($VERSION_NAME) is available! Please update now for the best experience.",
+              "es": "¡Hay una nueva actualización para Stream Master ($VERSION_NAME)! Actualice ahora para obtener la mejor experiencia."
+            },
+            "telegram_url": "https://t.me/Stream_master2"
+          }
+          EOF
+          echo '--- update.json ---'
+          cat update.json
+
+      - name: Publish GitHub Release (APK + update.json)
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION_NAME=$(grep -oE "versionName '[^']+'" app/build.gradle | sed -E "s/versionName '([^']+)'/\1/")
+          VERSION_CODE=$(grep -oE 'versionCode [0-9]+' app/build.gradle | grep -oE '[0-9]+')
+          TAG="v$VERSION_NAME-$VERSION_CODE"
+          # R8's mapping.txt (obfuscated name -> real class/method) for THIS exact build. Without
+          # it, a release-only crash like "com.stream.master.l1.e(SourceFile:8)" from a user's bug
+          # report is unreadable - with it, `retrace` turns that back into the real file/line.
+          # Optional: minifyEnabled could theoretically be off, so don't fail the release if it's
+          # missing for some reason.
+          MAPPING="app/build/outputs/mapping/release/mapping.txt"
+          EXTRA_ASSETS=""
+          if [ -f "$MAPPING" ]; then
+            cp "$MAPPING" "./mapping-$TAG.txt"
+            EXTRA_ASSETS="./mapping-$TAG.txt"
+          fi
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists (re-run on the same version) - updating its assets."
+            gh release upload "$TAG" \
+              app/build/outputs/apk/release/StreamMaster-signed.apk \
+              update.json $EXTRA_ASSETS --clobber
+            gh release edit "$TAG" --latest
+          else
+            gh release create "$TAG" \
+              app/build/outputs/apk/release/StreamMaster-signed.apk \
+              update.json $EXTRA_ASSETS \
+              --title "Stream Master $VERSION_NAME" \
+              --notes "Automated hardened release build." \
+              --latest
+          fi
