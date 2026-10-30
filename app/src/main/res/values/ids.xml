@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="nav_list" type="id"/>
+    <item name="nav_search" type="id"/>
+    <item name="globalSearchButton" type="id"/>
+    <item name="tv_focus_done" type="id" />
+</resources>

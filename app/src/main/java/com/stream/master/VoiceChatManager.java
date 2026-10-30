@@ -1,0 +1,845 @@
+package com.stream.master;
+
+import android.content.Context;
+import android.media.AudioAttributes;
+import android.media.AudioDeviceCallback;
+import android.media.AudioDeviceInfo;
+import android.media.AudioFocusRequest;
+import android.media.AudioManager;
+import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.webrtc.AudioSource;
+import org.webrtc.AudioTrack;
+import org.webrtc.DataChannel;
+import org.webrtc.IceCandidate;
+import org.webrtc.MediaConstraints;
+import org.webrtc.MediaStream;
+import org.webrtc.MediaStreamTrack;
+import org.webrtc.PeerConnection;
+import org.webrtc.PeerConnectionFactory;
+import org.webrtc.RtpReceiver;
+import org.webrtc.RtpSender;
+import org.webrtc.RtpTransceiver;
+import org.webrtc.SdpObserver;
+import org.webrtc.SessionDescription;
+import org.webrtc.audio.AudioDeviceModule;
+import org.webrtc.audio.JavaAudioDeviceModule;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
+
+/**
+ * Audio-only WebRTC mesh for Watch Party voice chat.
+ *
+ * One PeerConnection per remote participant. Signaling (offer / answer / ICE candidates) travels
+ * over the existing room WebSocket via RoomClient.sendSignal(...) / RoomClient.Listener.onSignal(...);
+ * this class never opens a connection of its own. To avoid glare when two peers would each try to
+ * open a connection to the other at once, the participant whose id sorts first (String.compareTo)
+ * always creates the offer - the other side only answers.
+ *
+ * A remote track needs no extra wiring to be heard: once it is attached to a PeerConnection it plays
+ * through the device's normal audio output via WebRTC's own audio device module.
+ *
+ * ---------------------------------------------------------------------------------------------
+ * REVISION 2 - manual ducking instead of relying on Android's audio-focus callbacks
+ * ---------------------------------------------------------------------------------------------
+ * Revision 1 of this class requested AudioManager focus and relied on Media3's default
+ * handleAudioFocus=true behavior to duck/restore the movie's volume automatically. In real-world
+ * testing across two phones this was still unreliable: on one device the movie volume dropped and
+ * never came back at all even after every mic went quiet; on another it ducked far lower than
+ * intended. Both symptoms are a known, documented class of bug, not specific to this app:
+ *   - ExoPlayer's own issue tracker (google/ExoPlayer#7182) documents a VoIP app that never
+ *     released focus back, leaving ExoPlayer "waiting indefinitely" at ducked volume - the exact
+ *     "never comes back" symptom reported here.
+ *   - Twilio's own Android Voice/Video SDK docs list "unexpected volume levels on certain
+ *     devices" as a known side effect of relying on the OS's focus/ducking machinery combined
+ *     with hardware acoustic echo cancellation, and recommend software AEC/NS for consistency.
+ *
+ * Fix (this revision): PlayerActivity now builds ExoPlayer with handleAudioFocus=false (see
+ * PlayerActivity.initializePlayer), so Android's focus callbacks no longer control the movie's
+ * volume at all. Instead, AudioSessionGuard below calls a duck callback directly and
+ * synchronously at the exact moment it reference-counts a real native WebRTC audio session
+ * starting or stopping - this is 100% deterministic because this app sets the volume itself; no
+ * other component, OS version, or OEM behavior can leave it "stuck", because nothing else is ever
+ * relied upon to set it back.
+ *
+ * ---------------------------------------------------------------------------------------------
+ * WHY THIS FILE ALSO MANAGES AudioManager mode / audio focus (read before touching this class)
+ * ---------------------------------------------------------------------------------------------
+ * WebRTC is, by design, a VoIP stack: the moment its native audio device module actually starts
+ * capturing or playing out audio, it switches AudioManager into MODE_IN_COMMUNICATION. This is
+ * inherent to libwebrtc, not something this app opts into - see the WebRTC team's own reply on
+ * this exact question ("Given the nature of WebRTC (it is a VoIP stack), it is required to use
+ * the MODE_IN_COMMUNICATION mode" - https://groups.google.com/g/discuss-webrtc/c/Pqag6R7QV2c).
+ * AudioSessionGuard still saves/restores that mode and still requests/abandons real audio focus
+ * as a courtesy to any other app that might be listening for it - that part is unchanged from
+ * revision 1 - but none of it is what the movie's volume depends on anymore.
+ *
+ * WHY HARDWARE AEC/NS ARE NOW DISABLED (googEchoCancellation / googNoiseSuppression below)
+ * ---------------------------------------------------------------------------------------------
+ * setUseHardwareAcousticEchoCanceler/NoiseSuppressor(true) hands audio processing to the vendor's
+ * own DSP/HAL implementation, which varies wildly in quality and side effects by chipset - this
+ * is widely documented (Twilio's Android SDK docs, react-native-webrtc#713, and a March-2026 fix
+ * in the Session messenger Android client all independently disable hardware AEC/NS for this
+ * exact reason: inconsistent, sometimes broken, behavior per device). Switching to WebRTC's own
+ * software AEC/NS trades a small amount of efficiency for consistent behavior across phones -
+ * directly relevant here since the two test phones behaved completely differently.
+ *
+ * WHY THE LOCAL TRACK IS CREATED LAZILY, AND ATTACHED VIA A TRANSCEIVER'S SENDER, NOT addTrack()
+ * ---------------------------------------------------------------------------------------------
+ * Every PeerConnection is created eagerly (so you can always receive audio from anyone who does
+ * have their mic on), but via addTransceiver(..., SEND_RECV) with NO track attached - this
+ * negotiates a sendrecv-capable audio m-line up front (so a future track can be attached without
+ * renegotiating) while sending nothing and capturing nothing. The local AudioSource/AudioTrack
+ * itself is only created the first time the user enables their mic (createLocalTrackIfNeeded()),
+ * and is only ever attached to a peer's sender (RtpSender.setTrack(...)) while the mic is
+ * actually on - detached from every sender the moment it's turned off. That is what makes the
+ * native start/stop callbacks fire exactly when real speech might be flowing, instead of for the
+ * entire time you're simply sitting in a room.
+ *
+ * ---------------------------------------------------------------------------------------------
+ * REVISION 3 - one-way audio fix ("the room creator can hear everyone but nobody hears them")
+ * ---------------------------------------------------------------------------------------------
+ * Root cause: the answering side used to pre-create its transceiver with addTransceiver() and attach
+ * the mic to THAT sender. libwebrtc does not re-use addTransceiver()-made transceivers for an incoming
+ * offer (only addTrack()-made ones), so it created a second, RECV_ONLY transceiver from the offer and
+ * the answer went out "recvonly" - the mic sat on an orphan sender and nothing was ever transmitted.
+ * Whichever device had the larger random member id was always the answerer, hence always muted.
+ * Now only the offerer pre-creates a transceiver; the answerer flips the offer's transceiver to
+ * SEND_RECV and attaches the mic to it before createAnswer(). Also: SDP observer callbacks hop to the
+ * main thread, ICE candidates are queued until the remote description is applied, offline members
+ * are dropped/rebuilt on reconnect, and failed ICE is restarted (bounded).
+ *
+ * Threading: all public methods are expected to be called from the main thread, matching RoomClient.
+ */
+final class VoiceChatManager {
+
+    private static PeerConnectionFactory factory;
+    private static AudioDeviceModule audioDeviceModule;
+    private static boolean factoryInitAttempted;
+    private static AudioSessionGuard sessionGuard;
+
+    private final RoomClient client;
+    private final String myId;
+    private final Handler main = new Handler(Looper.getMainLooper());
+    private final List<PeerConnection.IceServer> iceServers = new ArrayList<>();
+
+    private AudioSource localAudioSource;
+    private AudioTrack localAudioTrack;
+    private boolean micEnabled;
+    private boolean released;
+
+    private final Map<String, PeerConnection> peers = new HashMap<>();
+    private final Map<String, RtpSender> senders = new HashMap<>(); // this peer's slot for OUR track
+    private static final String TAG = "VoiceChat";
+    // Peers whose remote description is already applied (ICE candidates can be added directly).
+    private final Set<String> negotiated = new HashSet<>();
+    // ICE candidates that arrived before that peer's remote description was applied.
+    private final Map<String, List<IceCandidate>> pendingIce = new HashMap<>();
+    // Peers we (the offerer) were asked to / decided to ICE-restart, and how many times so far.
+    private final Set<String> restartPending = new HashSet<>();
+    private final Map<String, Integer> restartCount = new HashMap<>();
+
+    /**
+     * @param duckListener called with true the instant a real WebRTC audio session (record or
+     *                      playout, local or remote) starts, and false the instant the last one
+     *                      stops. The caller (RoomController) uses this to directly set the
+     *                      current ExoPlayer's volume - see class doc for why this replaced
+     *                      Android's audio-focus callbacks. May be called from any VoiceChatManager
+     *                      instance's lifecycle, always on the main thread. Pass null for none.
+     */
+    VoiceChatManager(Context context, RoomClient client, String myId, Consumer<Boolean> duckListener) {
+        this.client = client;
+        this.myId = myId;
+        iceServers.add(PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer());
+        // A TURN server may be added shortly after construction - see addTurnServer() below and
+        // RoomController.onWelcome(), which fetches it from /api/turn-credentials. Starting with
+        // STUN-only and upgrading in place (rather than blocking room entry on that fetch) means
+        // a slow/failed fetch never delays or breaks joining a room - it only means connections
+        // made in that narrow window don't get TURN's benefit. New connections created after the
+        // fetch completes (the normal case) pick up `iceServers` fresh, TURN included.
+        ensureFactory(context.getApplicationContext());
+        // The guard (and its duck target) is a process-lifetime singleton, but which player it
+        // should duck is per-room - always point it at the player belonging to THIS instance.
+        // Ducking is no longer driven by native audio-session callbacks (WebRTC's playout stays "active"
+        // for the whole call, which kept the movie quiet even with every mic off). RoomController now
+        // ducks from the server-confirmed mic state of the members instead - see refreshVoiceDuck().
+        if (sessionGuard != null) sessionGuard.setDuckListener(null);
+        // NOTE: no local track is created here on purpose - see class doc above. Entering a room
+        // must never by itself start capturing audio or touch AudioManager's mode.
+    }
+
+    /** Initialized once per process; never released, so re-entering a room is cheap and never re-inits mid-call. */
+    private static void ensureFactory(Context appContext) {
+        if (factory != null || factoryInitAttempted) return;
+        factoryInitAttempted = true;
+        try {
+            PeerConnectionFactory.initialize(
+                    PeerConnectionFactory.InitializationOptions.builder(appContext)
+                            .setEnableInternalTracer(false)
+                            .createInitializationOptions());
+
+            sessionGuard = new AudioSessionGuard(appContext);
+
+            JavaAudioDeviceModule.Builder admBuilder = JavaAudioDeviceModule.builder(appContext)
+                    // See class doc "WHY HARDWARE AEC/NS ARE NOW DISABLED": software AEC/NS behaves
+                    // consistently across devices, unlike the hardware path which varies by chipset.
+                    .setUseHardwareAcousticEchoCanceler(false)
+                    .setUseHardwareNoiseSuppressor(false)
+                    .setAudioRecordStateCallback(new JavaAudioDeviceModule.AudioRecordStateCallback() {
+                        @Override public void onWebRtcAudioRecordStart() { sessionGuard.onNativeSessionStart(); }
+                        @Override public void onWebRtcAudioRecordStop() { sessionGuard.onNativeSessionStop(); }
+                    })
+                    .setAudioTrackStateCallback(new JavaAudioDeviceModule.AudioTrackStateCallback() {
+                        @Override public void onWebRtcAudioTrackStart() { sessionGuard.onNativeSessionStart(); }
+                        @Override public void onWebRtcAudioTrackStop() { sessionGuard.onNativeSessionStop(); }
+                    });
+
+            // Play the other members' voices as MEDIA, not as a phone call. A VOICE_COMMUNICATION
+            // playout makes many phones (MIUI/Xiaomi especially) switch the WHOLE audio output to the
+            // earpiece - the little speaker above the screen - so the movie came out of it too, quiet
+            // and tinny, and stayed there until the call ended. As media, the voices and the movie share
+            // the normal loudspeaker and the same volume keys. Called by reflection so a library build
+            // without this setter still compiles and runs (AudioSessionGuard then forces the speaker).
+            try {
+                AudioAttributes playout = new AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .build();
+                JavaAudioDeviceModule.Builder.class
+                        .getMethod("setAudioAttributes", AudioAttributes.class)
+                        .invoke(admBuilder, playout);
+            } catch (Throwable t) {
+                Log.w(TAG, "ADM playout attributes not applied: " + t);
+            }
+            audioDeviceModule = admBuilder.createAudioDeviceModule();
+
+            factory = PeerConnectionFactory.builder()
+                    .setAudioDeviceModule(audioDeviceModule)
+                    .createPeerConnectionFactory();
+        } catch (Throwable t) {
+            factory = null; // caller must check isAvailable() before relying on voice chat
+        }
+    }
+
+    boolean isAvailable() { return factory != null; }
+
+    /**
+     * Adds a TURN server to the ICE server list used by any PeerConnection created from this
+     * point on (see the constructor's comment for why this is additive/in-place rather than
+     * required up front). Safe to call more than once; duplicates are harmless to WebRTC but
+     * pointless, so this only ever keeps one TURN entry.
+     */
+    void addTurnServer(List<String> urls, String username, String credential) {
+        if (urls == null || urls.isEmpty() || username == null || credential == null) return;
+        iceServers.removeIf(s -> s.username != null && !s.username.isEmpty());
+        iceServers.add(
+                PeerConnection.IceServer.builder(urls)
+                        .setUsername(username)
+                        .setPassword(credential)
+                        .createIceServer()
+        );
+    }
+
+    private void createLocalTrackIfNeeded() {
+        if (factory == null || localAudioTrack != null) return;
+        MediaConstraints audioConstraints = new MediaConstraints();
+        audioConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googEchoCancellation", "true"));
+        audioConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googAutoGainControl", "true"));
+        audioConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googNoiseSuppression", "true"));
+        try {
+            localAudioSource = factory.createAudioSource(audioConstraints);
+            localAudioTrack = factory.createAudioTrack("watchparty-mic-" + myId, localAudioSource);
+            localAudioTrack.setEnabled(true); // the sender attach/detach below is what actually gates capture
+        } catch (Throwable t) {
+            localAudioTrack = null;
+            localAudioSource = null;
+        }
+    }
+
+    /**
+     * Turns local mic capture on/off. The caller is also responsible for RoomClient.setMic(on);
+     * this only touches the local WebRTC/audio side, driven by the server's confirmed voice-state
+     * (see RoomController.onVoiceState), not called optimistically on tap.
+     */
+    void setMicEnabled(boolean on) {
+        if (on) {
+            createLocalTrackIfNeeded();
+            micEnabled = localAudioTrack != null;
+            if (!micEnabled) return;
+            for (Map.Entry<String, RtpSender> e : senders.entrySet()) {
+                try { e.getValue().setTrack(localAudioTrack, false); } catch (Exception ignored) { }
+            }
+        } else {
+            micEnabled = false;
+            // Detach from every sender - not just AudioTrack.setEnabled(false) - because a track
+            // still attached to an active sender is still "in use" as far as the native audio
+            // pipeline is concerned, which is exactly the bug this rewrite fixes (see class doc).
+            for (Map.Entry<String, RtpSender> e : senders.entrySet()) {
+                try { e.getValue().setTrack(null, false); } catch (Exception ignored) { }
+            }
+        }
+    }
+
+    boolean isMicEnabled() { return micEnabled; }
+
+    /** Called whenever the room's member list changes: opens connections to new members, closes stale ones. */
+    void syncMembers(List<RoomClient.Member> members) {
+        if (factory == null || released) return;
+        Set<String> live = new HashSet<>();
+        for (RoomClient.Member m : members) {
+            if (m.id.equals(myId)) continue;
+            // An offline member's socket (and so its WebRTC session) is gone. Dropping the peer here
+            // means that when it comes back online we build a brand-new connection to it instead of
+            // keeping a dead one that nobody will ever re-negotiate.
+            if (!m.online) continue;
+            live.add(m.id);
+            if (!peers.containsKey(m.id)) connectTo(m.id);
+        }
+        for (String id : new ArrayList<>(peers.keySet())) {
+            if (!live.contains(id)) closePeer(id);
+        }
+    }
+
+    private boolean isOfferer(String remoteId) {
+        // Deterministic offerer: the lower id always initiates, so both sides never send an offer at once.
+        return myId.compareTo(remoteId) < 0;
+    }
+
+    private void connectTo(String remoteId) {
+        boolean offerer = isOfferer(remoteId);
+        PeerConnection pc = createPeerConnection(remoteId, offerer);
+        if (pc == null) return;
+        peers.put(remoteId, pc);
+        if (offerer) createOffer(remoteId, pc, false);
+    }
+
+    /**
+     * @param withTransceiver true only for the side that will send the OFFER. The answering side must
+     *        NOT pre-create a transceiver: libwebrtc never re-uses a transceiver made by addTransceiver()
+     *        for an incoming offer's m-line (only addTrack()-made ones), so a pre-created one would stay
+     *        orphaned and unnegotiated while a second, receive-only transceiver is created from the
+     *        offer - and our mic track would be attached to the orphan, i.e. never sent. See
+     *        prepareAnswerTransceiver().
+     */
+    private PeerConnection createPeerConnection(String remoteId, boolean withTransceiver) {
+        if (factory == null) return null;
+        PeerConnection.RTCConfiguration rtcConfig = new PeerConnection.RTCConfiguration(iceServers);
+        rtcConfig.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
+        PeerConnection pc = factory.createPeerConnection(rtcConfig, new PeerConnection.Observer() {
+            @Override public void onIceCandidate(IceCandidate candidate) {
+                JSONObject data = new JSONObject();
+                try {
+                    data.put("kind", "ice");
+                    data.put("sdpMid", candidate.sdpMid);
+                    data.put("sdpMLineIndex", candidate.sdpMLineIndex);
+                    data.put("candidate", candidate.sdp);
+                } catch (JSONException ignored) { }
+                main.post(() -> { if (!released) client.sendSignal(remoteId, data); });
+            }
+            @Override public void onIceCandidatesRemoved(IceCandidate[] candidates) { }
+            @Override public void onAddStream(MediaStream stream) { /* audio plays automatically via the device audio module */ }
+            @Override public void onRemoveStream(MediaStream stream) { }
+            @Override public void onDataChannel(DataChannel channel) { }
+            @Override public void onRenegotiationNeeded() {
+                // Only used for ICE restarts we asked for ourselves; the initial negotiation is
+                // driven explicitly by connectTo().
+                main.post(() -> {
+                    PeerConnection cur = peers.get(remoteId);
+                    if (!released && cur != null && restartPending.remove(remoteId)) createOffer(remoteId, cur, true);
+                });
+            }
+            @Override public void onIceConnectionChange(PeerConnection.IceConnectionState state) {
+                Log.d(TAG, "ice(" + remoteId + ") = " + state);
+                if (state == PeerConnection.IceConnectionState.FAILED) {
+                    main.post(() -> requestIceRestart(remoteId));
+                }
+            }
+            @Override public void onIceConnectionReceivingChange(boolean receiving) { }
+            @Override public void onIceGatheringChange(PeerConnection.IceGatheringState state) { }
+            @Override public void onSignalingChange(PeerConnection.SignalingState state) { }
+            @Override public void onAddTrack(RtpReceiver receiver, MediaStream[] streams) { }
+        });
+        if (pc == null) return null;
+
+        // sendrecv up front, track attached later (or never) - see class doc for why. This lets
+        // us always receive the remote side's audio without ever sending/capturing anything
+        // ourselves unless and until the local mic is actually turned on.
+        if (withTransceiver) {
+            RtpTransceiver.RtpTransceiverInit init =
+                    new RtpTransceiver.RtpTransceiverInit(RtpTransceiver.RtpTransceiverDirection.SEND_RECV);
+            RtpTransceiver transceiver = pc.addTransceiver(MediaStreamTrack.MediaType.MEDIA_TYPE_AUDIO, init);
+            if (transceiver != null) attachSender(remoteId, transceiver);
+        }
+        return pc;
+    }
+
+    /** Remembers this peer's sender for our mic and, if the mic is already on, starts sending right away. */
+    private void attachSender(String remoteId, RtpTransceiver transceiver) {
+        RtpSender sender = transceiver.getSender();
+        if (sender == null) return;
+        senders.put(remoteId, sender);
+        // A peer that joins while I already have my mic on should hear me immediately.
+        if (micEnabled && localAudioTrack != null) {
+            try { sender.setTrack(localAudioTrack, false); } catch (Exception ignored) { }
+        }
+    }
+
+    /**
+     * ANSWERER side, called after the remote offer was applied and BEFORE createAnswer(): the
+     * transceiver libwebrtc created from the offer's audio m-line starts out RECV_ONLY, so left alone
+     * the answer would say "recvonly" and this device could never be heard by the offerer. Flip it to
+     * SEND_RECV and point our sender slot at it.
+     */
+    private void prepareAnswerTransceiver(String remoteId, PeerConnection pc) {
+        try {
+            RtpTransceiver target = null;
+            for (RtpTransceiver t : pc.getTransceivers()) {
+                if (t.getMediaType() != MediaStreamTrack.MediaType.MEDIA_TYPE_AUDIO) continue;
+                String mid = null;
+                try { mid = t.getMid(); } catch (Throwable ignored) { }
+                if (mid != null) { target = t; break; }   // the one bound to the offer's m-line
+                if (target == null) target = t;            // fallback: first audio transceiver
+            }
+            if (target == null) { Log.w(TAG, "answerer: no audio transceiver for " + remoteId); return; }
+            boolean ok = target.setDirection(RtpTransceiver.RtpTransceiverDirection.SEND_RECV);
+            Log.d(TAG, "answerer(" + remoteId + ") direction->SEND_RECV ok=" + ok);
+            attachSender(remoteId, target);
+        } catch (Throwable t) {
+            Log.w(TAG, "prepareAnswerTransceiver failed", t);
+        }
+    }
+
+    /** ICE failed: the offerer restarts ICE itself; the answerer asks the offerer to (bounded, no loops). */
+    private void requestIceRestart(String remoteId) {
+        PeerConnection pc = peers.get(remoteId);
+        if (released || pc == null) return;
+        int n = restartCount.containsKey(remoteId) ? restartCount.get(remoteId) : 0;
+        if (n >= 3) return;
+        restartCount.put(remoteId, n + 1);
+        if (isOfferer(remoteId)) {
+            restartPending.add(remoteId);
+            try { pc.restartIce(); } catch (Throwable t) { restartPending.remove(remoteId); }
+        } else {
+            JSONObject data = new JSONObject();
+            try { data.put("kind", "restart"); } catch (JSONException ignored) { }
+            client.sendSignal(remoteId, data);
+        }
+    }
+
+    private void createOffer(String remoteId, PeerConnection pc, boolean iceRestart) {
+        MediaConstraints mc = new MediaConstraints();
+        if (iceRestart) mc.mandatory.add(new MediaConstraints.KeyValuePair("IceRestart", "true"));
+        pc.createOffer(new SimpleSdpObserver() {
+            @Override public void onCreateSuccess(SessionDescription sdp) {
+                pc.setLocalDescription(new SimpleSdpObserver() {
+                    @Override public void onSetFailure(String s) { Log.w(TAG, "setLocal(offer) failed: " + s); }
+                }, sdp);
+                JSONObject data = new JSONObject();
+                try {
+                    data.put("kind", "offer");
+                    data.put("sdp", sdp.description);
+                    if (iceRestart) data.put("iceRestart", true); // same connection, new ICE credentials: peer must NOT rebuild
+                } catch (JSONException ignored) { }
+                main.post(() -> { if (!released && peers.get(remoteId) == pc) client.sendSignal(remoteId, data); });
+            }
+            @Override public void onCreateFailure(String s) { Log.w(TAG, "createOffer failed: " + s); }
+        }, mc);
+    }
+
+    /** Routes an incoming offer / answer / ice payload from RoomClient.Listener.onSignal(fromId, data). */
+    void onSignal(String fromId, JSONObject data) {
+        if (factory == null || released) return;
+        final String kind = data.optString("kind");
+        PeerConnection pc = peers.get(fromId);
+
+        if ("restart".equals(kind)) {
+            // The answerer's ICE failed and it asked us (the offerer) to restart ICE.
+            if (pc != null && isOfferer(fromId)) requestIceRestart(fromId);
+            return;
+        }
+
+        if ("offer".equals(kind)) {
+            // A second offer on a connection that already completed negotiation means the other side
+            // rebuilt its PeerConnection (reconnect / app restart). Re-negotiating on top of the old
+            // one fails (new DTLS identity), so start clean.
+            if (pc != null && negotiated.contains(fromId) && !data.optBoolean("iceRestart", false)) {
+                closePeer(fromId);
+                pc = null;
+            }
+            if (pc == null) {
+                pc = createPeerConnection(fromId, false);   // we are answering: no pre-made transceiver
+                if (pc == null) return;
+                peers.put(fromId, pc);
+            }
+        }
+        if (pc == null) return;
+        final PeerConnection fpc = pc;
+
+        switch (kind) {
+            case "offer": {
+                SessionDescription remote = new SessionDescription(SessionDescription.Type.OFFER, data.optString("sdp"));
+                fpc.setRemoteDescription(new SimpleSdpObserver() {
+                    @Override public void onSetSuccess() {
+                        // libwebrtc invokes this on its signaling thread: hop to main before touching our maps.
+                        main.post(() -> {
+                            if (released || peers.get(fromId) != fpc) return;
+                            negotiated.add(fromId);
+                            prepareAnswerTransceiver(fromId, fpc);
+                            flushPendingIce(fromId, fpc);
+                            fpc.createAnswer(new SimpleSdpObserver() {
+                                @Override public void onCreateSuccess(SessionDescription answer) {
+                                    fpc.setLocalDescription(new SimpleSdpObserver() {
+                                        @Override public void onSetFailure(String s) { Log.w(TAG, "setLocal(answer) failed: " + s); }
+                                    }, answer);
+                                    JSONObject out = new JSONObject();
+                                    try { out.put("kind", "answer"); out.put("sdp", answer.description); } catch (JSONException ignored) { }
+                                    main.post(() -> { if (!released && peers.get(fromId) == fpc) client.sendSignal(fromId, out); });
+                                }
+                                @Override public void onCreateFailure(String s) { Log.w(TAG, "createAnswer failed: " + s); }
+                            }, new MediaConstraints());
+                        });
+                    }
+                    @Override public void onSetFailure(String s) {
+                        Log.w(TAG, "setRemote(offer) failed: " + s);
+                        main.post(() -> { if (peers.get(fromId) == fpc) closePeer(fromId); });
+                    }
+                }, remote);
+                break;
+            }
+            case "answer": {
+                SessionDescription remote = new SessionDescription(SessionDescription.Type.ANSWER, data.optString("sdp"));
+                fpc.setRemoteDescription(new SimpleSdpObserver() {
+                    @Override public void onSetSuccess() {
+                        main.post(() -> {
+                            if (released || peers.get(fromId) != fpc) return;
+                            negotiated.add(fromId);
+                            flushPendingIce(fromId, fpc);
+                        });
+                    }
+                    @Override public void onSetFailure(String s) { Log.w(TAG, "setRemote(answer) failed: " + s); }
+                }, remote);
+                break;
+            }
+            case "ice": {
+                IceCandidate cand = new IceCandidate(data.optString("sdpMid"), data.optInt("sdpMLineIndex"), data.optString("candidate"));
+                if (negotiated.contains(fromId)) {
+                    try { fpc.addIceCandidate(cand); } catch (Exception ignored) { }
+                } else {
+                    // Remote description not applied yet: libwebrtc would reject/drop it, so hold it.
+                    List<IceCandidate> q = pendingIce.get(fromId);
+                    if (q == null) { q = new ArrayList<>(); pendingIce.put(fromId, q); }
+                    q.add(cand);
+                }
+                break;
+            }
+            default: break;
+        }
+    }
+
+    private void flushPendingIce(String fromId, PeerConnection pc) {
+        List<IceCandidate> q = pendingIce.remove(fromId);
+        if (q == null) return;
+        for (IceCandidate c : q) {
+            try { pc.addIceCandidate(c); } catch (Exception ignored) { }
+        }
+    }
+
+    private void closePeer(String id) {
+        senders.remove(id);
+        negotiated.remove(id);
+        pendingIce.remove(id);
+        restartPending.remove(id);
+        restartCount.remove(id);
+        PeerConnection pc = peers.remove(id);
+        if (pc != null) {
+            try { pc.close(); } catch (Exception ignored) { }
+        }
+    }
+
+    /** Full teardown: room leave/close, voice disabled, activity destruction, or app backgrounded for good. */
+    void release() {
+        if (released) return;
+        released = true;
+        for (String id : new ArrayList<>(peers.keySet())) closePeer(id);
+        peers.clear();
+        senders.clear();
+        negotiated.clear();
+        pendingIce.clear();
+        restartPending.clear();
+        restartCount.clear();
+        if (localAudioTrack != null) {
+            try { localAudioTrack.setEnabled(false); localAudioTrack.dispose(); } catch (Exception ignored) { }
+            localAudioTrack = null;
+        }
+        if (localAudioSource != null) {
+            try { localAudioSource.dispose(); } catch (Exception ignored) { }
+            localAudioSource = null;
+        }
+        micEnabled = false;
+        // Belt-and-suspenders beyond the reference-counted guard: leaving a room is exactly the
+        // moment the "movie volume never came back" bug was most visible, so force the player back
+        // to full volume here unconditionally, then detach this instance's duck target so a
+        // destroyed/backgrounded PlayerActivity never gets called into later.
+        if (sessionGuard != null) {
+            sessionGuard.forceDuckOff();
+            sessionGuard.setDuckListener(null);
+        }
+    }
+
+    private static class SimpleSdpObserver implements SdpObserver {
+        @Override public void onCreateSuccess(SessionDescription sessionDescription) { }
+        @Override public void onSetSuccess() { }
+        @Override public void onCreateFailure(String s) { }
+        @Override public void onSetFailure(String s) { }
+    }
+
+    /**
+     * Tracks whether any real WebRTC audio session (record or playout) is active, and:
+     *  1) directly calls the current duck listener (see VoiceChatManager's constructor) - this is
+     *     now the ONLY thing that controls the movie's volume; see class doc "REVISION 2".
+     *  2) saves/restores AudioManager's mode and requests/abandons real audio focus as a courtesy
+     *     to other apps - unchanged from revision 1, but no longer load-bearing for our own player.
+     * Reference-counted because multiple things can start/stop independently (our own mic, plus
+     * however many remote peers are talking), and only the 0 -> 1 and 1 -> 0 transitions matter.
+     */
+    private static final class AudioSessionGuard {
+        private final Context appContext;
+        private final Handler main;
+
+        private int activeSessions = 0;
+        private boolean modeSaved = false;
+        private int savedMode = AudioManager.MODE_NORMAL;
+        private boolean focusHeld = false;
+        private AudioFocusRequest focusRequest; // API 26+ only; null and unused below that
+        private final AudioManager.OnAudioFocusChangeListener focusListener;
+        private Consumer<Boolean> duckListener;
+        private boolean lastDuckState = false;
+
+        // Loudspeaker routing (see applyRoute()).
+        private boolean routeForced = false;
+        private boolean savedSpeakerOn = false;
+        private AudioDeviceCallback deviceCallback;
+        private final Runnable routeTask = this::applyRoute;
+
+        AudioSessionGuard(Context appContext) {
+            this.appContext = appContext;
+            this.main = new Handler(Looper.getMainLooper());
+            // We don't need to react to focus changes ourselves (the movie's volume no longer
+            // depends on focus at all - see class doc); this listener only needs to exist because
+            // the focus-request APIs require one.
+            this.focusListener = change -> { };
+        }
+
+        void setDuckListener(Consumer<Boolean> listener) {
+            this.duckListener = listener;
+            // A fresh listener (new room/new player) must immediately reflect the CURRENT state,
+            // not wait for the next start/stop transition - otherwise a player created while a
+            // session is already active would wrongly start at full volume.
+            if (listener != null) listener.accept(activeSessions > 0);
+        }
+
+        /** Forces the duck state back off right now, regardless of the reference count. See VoiceChatManager.release(). */
+        void forceDuckOff() {
+            lastDuckState = false;
+            if (duckListener != null) duckListener.accept(false);
+        }
+
+        /** Called from JavaAudioDeviceModule's native audio thread - hop to main before touching AudioManager. */
+        void onNativeSessionStart() {
+            main.post(() -> {
+                activeSessions++;
+                if (activeSessions == 1) engage();
+                else applyRoute();
+            });
+        }
+
+        void onNativeSessionStop() {
+            main.post(() -> {
+                activeSessions = Math.max(0, activeSessions - 1);
+                if (activeSessions == 0) release();
+            });
+        }
+
+        private void engage() {
+            if (!lastDuckState) {
+                lastDuckState = true;
+                if (duckListener != null) duckListener.accept(true);
+            }
+
+            AudioManager am = (AudioManager) appContext.getSystemService(Context.AUDIO_SERVICE);
+            if (am == null) return;
+
+            // WebRTC's native ADM sets MODE_IN_COMMUNICATION itself the moment it actually starts
+            // capturing/playing (that part is inherent to libwebrtc - see class doc). Saving the
+            // mode here, before that happens, is what lets release() below put it back exactly as
+            // found, rather than assuming it was MODE_NORMAL.
+            if (!modeSaved) {
+                savedMode = am.getMode();
+                modeSaved = true;
+            }
+
+            // Defensive: on some devices the input route isn't fully applied right after entering
+            // MODE_IN_COMMUNICATION unless something explicitly touches it (a real-world fix for
+            // this exact flakiness shipped in Session messenger's Android client, March 2026).
+            // Harmless no-op on devices that don't need it.
+            try { am.setMicrophoneMute(false); } catch (Exception ignored) { }
+
+            // Keep the sound on the loudspeaker. libwebrtc / the OS may flip the audio mode a moment
+            // after the session starts, so check again a few times and whenever headphones come or go.
+            applyRoute();
+            main.removeCallbacks(routeTask);
+            main.postDelayed(routeTask, 400);
+            main.postDelayed(routeTask, 1500);
+            main.postDelayed(routeTask, 4000);
+            registerDeviceCallback(am);
+
+            if (!focusHeld) {
+                // Declared as MOVIE/MEDIA (not VOICE_COMMUNICATION): requesting focus as a "call" is one
+                // of the things that makes MIUI reroute the output to the earpiece.
+                AudioAttributes attrs = new AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MOVIE)
+                        .build();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    focusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                            .setAudioAttributes(attrs)
+                            .setOnAudioFocusChangeListener(focusListener, main)
+                            .build();
+                    focusHeld = am.requestAudioFocus(focusRequest) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
+                } else {
+                    //noinspection deprecation
+                    focusHeld = am.requestAudioFocus(focusListener, AudioManager.STREAM_VOICE_CALL,
+                            AudioManager.AUDIOFOCUS_GAIN_TRANSIENT) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
+                }
+            }
+        }
+
+        private void release() {
+            if (lastDuckState) {
+                lastDuckState = false;
+                if (duckListener != null) duckListener.accept(false);
+            }
+
+            AudioManager am = (AudioManager) appContext.getSystemService(Context.AUDIO_SERVICE);
+            if (am == null) return;
+
+            if (focusHeld) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && focusRequest != null) {
+                    am.abandonAudioFocusRequest(focusRequest);
+                } else {
+                    //noinspection deprecation
+                    am.abandonAudioFocus(focusListener);
+                }
+                focusHeld = false;
+            }
+
+            main.removeCallbacks(routeTask);
+            unregisterDeviceCallback(am);
+            clearForcedRoute(am);
+
+            if (modeSaved) {
+                am.setMode(savedMode);
+                modeSaved = false;
+            }
+        }
+
+        // ------------------------------------------------------------ loudspeaker routing
+
+        /**
+         * Puts the output on the phone's loudspeaker unless real headphones (wired / Bluetooth / USB)
+         * are connected, in which case the system's own choice is left alone. Idempotent; undone in
+         * release() so the phone goes back to normal after leaving the room.
+         */
+        private void applyRoute() {
+            if (activeSessions <= 0) return;
+            AudioManager am = (AudioManager) appContext.getSystemService(Context.AUDIO_SERVICE);
+            if (am == null) return;
+            try {
+                if (hasExternalOutput(am)) clearForcedRoute(am);
+                else forceSpeaker(am);
+            } catch (Throwable t) {
+                Log.w(TAG, "applyRoute failed", t);
+            }
+        }
+
+        private void forceSpeaker(AudioManager am) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                AudioDeviceInfo cur = am.getCommunicationDevice();
+                if (cur != null && cur.getType() == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER) return; // already right
+                for (AudioDeviceInfo d : am.getAvailableCommunicationDevices()) {
+                    if (d.getType() == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER) {
+                        if (am.setCommunicationDevice(d)) routeForced = true;
+                        Log.d(TAG, "route -> loudspeaker (setCommunicationDevice) forced=" + routeForced);
+                        return;
+                    }
+                }
+            } else {
+                //noinspection deprecation
+                if (!am.isSpeakerphoneOn()) {
+                    savedSpeakerOn = false;
+                    //noinspection deprecation
+                    am.setSpeakerphoneOn(true);
+                    routeForced = true;
+                    Log.d(TAG, "route -> loudspeaker (setSpeakerphoneOn)");
+                }
+            }
+        }
+
+        private void clearForcedRoute(AudioManager am) {
+            if (!routeForced) return;
+            routeForced = false;
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    am.clearCommunicationDevice();
+                } else {
+                    //noinspection deprecation
+                    am.setSpeakerphoneOn(savedSpeakerOn);
+                }
+                Log.d(TAG, "route restored");
+            } catch (Throwable t) {
+                Log.w(TAG, "clearForcedRoute failed", t);
+            }
+        }
+
+        private boolean hasExternalOutput(AudioManager am) {
+            for (AudioDeviceInfo d : am.getDevices(AudioManager.GET_DEVICES_OUTPUTS)) {
+                int t = d.getType();
+                if (t == AudioDeviceInfo.TYPE_WIRED_HEADSET
+                        || t == AudioDeviceInfo.TYPE_WIRED_HEADPHONES
+                        || t == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP
+                        || t == AudioDeviceInfo.TYPE_BLUETOOTH_SCO
+                        || t == AudioDeviceInfo.TYPE_USB_HEADSET
+                        || t == AudioDeviceInfo.TYPE_USB_DEVICE) return true;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && t == AudioDeviceInfo.TYPE_HEARING_AID) return true;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && t == AudioDeviceInfo.TYPE_BLE_HEADSET) return true;
+            }
+            return false;
+        }
+
+        private void registerDeviceCallback(AudioManager am) {
+            if (deviceCallback != null) return;
+            deviceCallback = new AudioDeviceCallback() {
+                @Override public void onAudioDevicesAdded(AudioDeviceInfo[] added) { applyRoute(); }
+                @Override public void onAudioDevicesRemoved(AudioDeviceInfo[] removed) { applyRoute(); }
+            };
+            try { am.registerAudioDeviceCallback(deviceCallback, main); } catch (Throwable t) { deviceCallback = null; }
+        }
+
+        private void unregisterDeviceCallback(AudioManager am) {
+            if (deviceCallback == null) return;
+            try { am.unregisterAudioDeviceCallback(deviceCallback); } catch (Throwable ignored) { }
+            deviceCallback = null;
+        }
+    }
+}

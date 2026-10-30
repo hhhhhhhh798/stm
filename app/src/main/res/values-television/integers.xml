@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- TV renders at ~700dp width (see TvUtils.applyTvDensity): 5 poster columns fit comfortably. -->
+    <integer name="page_grid_span">5</integer>
+</resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/nav_home" android:icon="@drawable/ic_home" android:title="@string/home" />
+    <item android:id="@+id/nav_categories" android:icon="@drawable/ic_categories_premium" android:title="@string/movies" />
+    <item android:id="@+id/nav_series" android:icon="@drawable/ic_series" android:title="@string/series" />
+    <item android:id="@+id/nav_list" android:icon="@drawable/ic_bookmark" android:title="@string/favorites" />
+    <item android:id="@+id/nav_menu" android:icon="@drawable/ic_menu_3lines" android:title="@string/menu" />
+</menu>
